@@ -264,18 +264,18 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
                 <Pie
                   data={statusData}
                   cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
+                  cy="40%"
+                  innerRadius={50}
+                  outerRadius={70}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {statusData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => value.toLocaleString()} />
+                <Legend verticalAlign="bottom" height={36} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -294,18 +294,18 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
                 <Pie
                   data={conversionPieData}
                   cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
+                  cy="40%"
+                  innerRadius={50}
+                  outerRadius={70}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {conversionPieData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => value.toLocaleString()} />
+                <Legend verticalAlign="bottom" height={36} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -324,18 +324,18 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
                 <Pie
                   data={bettingPieData}
                   cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
+                  cy="40%"
+                  innerRadius={50}
+                  outerRadius={70}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {bettingPieData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => value.toLocaleString()} />
+                <Legend verticalAlign="bottom" height={36} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>

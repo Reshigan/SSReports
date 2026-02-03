@@ -475,7 +475,7 @@ app.get('/api/shops-analytics', async (c) => {
         SUM(CASE WHEN c.status = 'APPROVED' THEN 1 ELSE 0 END) as approved_checkins,
         SUM(CASE WHEN vr.converted = 1 THEN 1 ELSE 0 END) as conversions,
         MAX(c.timestamp) as last_visit,
-        MAX(c.photo_path) as latest_photo
+        MAX(c.photo_base64) as latest_photo
       FROM shops s
       LEFT JOIN checkins c ON s.id = c.shop_id
       LEFT JOIN visit_responses vr ON c.id = vr.checkin_id
@@ -514,7 +514,7 @@ app.get('/api/customers-analytics', async (c) => {
         vr.checkin_id,
         c.id as checkin_id,
         c.timestamp,
-        c.photo_path,
+        c.photo_base64,
         c.latitude,
         c.longitude,
         c.agent_id,
@@ -563,7 +563,7 @@ app.get('/api/customer/:checkinId', async (c) => {
       SELECT 
         vr.*,
         c.timestamp,
-        c.photo_path,
+        c.photo_base64,
         c.latitude,
         c.longitude,
         c.agent_id,
