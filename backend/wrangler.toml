@@ -1,0 +1,20 @@
+name = "ssreports-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+MYSQL_HOST = "13.244.241.5"
+MYSQL_PORT = "3306"
+MYSQL_DATABASE = "salessync"
+MYSQL_USER = "dev"
+JWT_SECRET = "ssreports-jwt-secret-key-2024"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ssreports-db"
+database_id = "placeholder-will-be-updated"
+
+[env.production]
+routes = [
+  { pattern = "ss.vantax.co.za/api/*", zone_name = "vantax.co.za" }
+]
