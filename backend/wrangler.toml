@@ -3,11 +3,9 @@ main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
 [vars]
-MYSQL_HOST = "13.244.241.5"
-MYSQL_PORT = "3306"
-MYSQL_DATABASE = "salessync"
-MYSQL_USER = "dev"
-JWT_SECRET = "ssreports-jwt-secret-key-2024"
+# Note: Sensitive values should be set using wrangler secret put <NAME>
+# Required secrets: JWT_SECRET
+# Optional for data sync: MYSQL_HOST, MYSQL_PORT, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD
 
 [[d1_databases]]
 binding = "DB"

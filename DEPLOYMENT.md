@@ -20,8 +20,8 @@ SSReports is a comprehensive reporting platform for SalesSync data, deployed on 
 ```bash
 export CLOUDFLARE_API_TOKEN="your-api-token"
 # Or use Global API Key
-export CLOUDFLARE_EMAIL="reshigan@vantax.co.za"
-export CLOUDFLARE_API_KEY="21fff817fa4a851d0ddc3975c7f8c1a31fbc4"
+export CLOUDFLARE_EMAIL="your-email@example.com"
+export CLOUDFLARE_API_KEY="your-cloudflare-api-key"
 ```
 
 ### 2. Create D1 Database

@@ -5,13 +5,17 @@ This script connects to the MySQL database and exports all necessary data.
 """
 
 import json
+import os
 import pymysql
 from sqlalchemy import create_engine, text
 import pandas as pd
 from datetime import datetime
 import math
 
-DATABASE_URI = "mysql+pymysql://dev:Developer1234%23@13.244.241.5:3306/salessync"
+# Load DATABASE_URI from environment variable
+DATABASE_URI = os.environ.get("DATABASE_URI")
+if not DATABASE_URI:
+    raise ValueError("DATABASE_URI environment variable is required")
 
 def clean_value(val):
     """Clean NaN and None values for JSON serialization"""
