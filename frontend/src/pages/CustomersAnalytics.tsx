@@ -30,8 +30,6 @@ interface CustomersAnalyticsProps {
 interface CustomerRecord {
   checkin_id: number;
   timestamp: string;
-  photo_path: string | null;
-  photo_base64: string | null;
   latitude: number;
   longitude: number;
   agent_id: number;
@@ -46,8 +44,6 @@ interface CustomerRecord {
 interface CustomerDetail {
   checkin_id: number;
   timestamp: string;
-  photo_path: string | null;
-  photo_base64: string | null;
   latitude: number;
   longitude: number;
   agent_id: number;
@@ -341,16 +337,13 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
                     )}
                   </TableCell>
                   <TableCell className="text-center">
-                    {customer.photo_base64 ? (
-                      <img 
-                        src={`data:image/jpeg;base64,${customer.photo_base64}`}
-                        alt="Customer photo"
-                        className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80"
-                        onClick={() => fetchCustomerDetail(customer.checkin_id)}
-                      />
-                    ) : (
-                      <span className="text-slate-300">-</span>
-                    )}
+                    <img 
+                      src={`${apiUrl}/api/photos/${customer.checkin_id}`}
+                      alt="Customer photo"
+                      className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80"
+                      onClick={() => fetchCustomerDetail(customer.checkin_id)}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
                   </TableCell>
                   <TableCell className="text-center">
                     <Button 
@@ -449,16 +442,15 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
                 </Card>
               </div>
 
-              {selectedCustomer.photo_base64 && (
-                <div>
-                  <h4 className="font-semibold mb-2">Photo Proof</h4>
-                  <img 
-                    src={`data:image/jpeg;base64,${selectedCustomer.photo_base64}`}
-                    alt="Photo evidence"
-                    className="max-w-full h-auto rounded-lg shadow-md"
-                  />
-                </div>
-              )}
+              <div>
+                <h4 className="font-semibold mb-2">Photo Proof</h4>
+                <img 
+                  src={`${apiUrl}/api/photos/${selectedCustomer.checkin_id}`}
+                  alt="Photo evidence"
+                  className="max-w-full h-auto rounded-lg shadow-md"
+                  onError={(e) => { e.currentTarget.parentElement!.style.display = 'none'; }}
+                />
+              </div>
 
               {selectedCustomer.responses && (
                 <div>
