@@ -340,7 +340,10 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
                     <img 
                       src={`${apiUrl}/api/photos/${customer.checkin_id}`}
                       alt="Customer photo"
-                      className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80"
+                      loading="lazy"
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80 inline-block bg-slate-100"
                       onClick={() => fetchCustomerDetail(customer.checkin_id)}
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
@@ -447,7 +450,8 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
                 <img 
                   src={`${apiUrl}/api/photos/${selectedCustomer.checkin_id}`}
                   alt="Photo evidence"
-                  className="max-w-full h-auto rounded-lg shadow-md"
+                  loading="lazy"
+                  className="max-w-full max-h-96 w-auto h-auto rounded-lg shadow-md object-contain bg-slate-100"
                   onError={(e) => { e.currentTarget.parentElement!.style.display = 'none'; }}
                 />
               </div>
