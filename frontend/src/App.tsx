@@ -58,9 +58,12 @@ function Sidebar({ user, onLogout }: { user: User; onLogout: () => void }) {
         transform transition-transform duration-200 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-emerald-400">SSReports</h1>
-          <p className="text-sm text-slate-400 mt-1">SalesSync Analytics</p>
+        <div className="p-6 flex items-center gap-3">
+          <img src="/logo.svg" alt="SalesSync" className="w-10 h-10" />
+          <div>
+            <h1 className="text-xl font-bold text-emerald-400">SalesSync</h1>
+            <p className="text-xs text-slate-400">Reports & Analytics</p>
+          </div>
         </div>
 
         <nav className="mt-6">

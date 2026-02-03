@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="90" fill="url(#grad1)"/>
+  
+  <!-- Sync arrows forming an S shape -->
+  <g fill="white">
+    <!-- Top arrow (curved) -->
+    <path d="M70 55 Q100 35 130 55 L130 45 L150 65 L125 75 L125 65 Q100 50 80 65 L80 75 L60 55 L70 55 Z" />
+    
+    <!-- Bottom arrow (curved) -->
+    <path d="M130 145 Q100 165 70 145 L70 155 L50 135 L75 125 L75 135 Q100 150 120 135 L120 125 L140 145 L130 145 Z" />
+    
+    <!-- Center bar chart representing sales -->
+    <rect x="75" y="85" width="15" height="30" rx="2"/>
+    <rect x="93" y="75" width="15" height="40" rx="2"/>
+    <rect x="111" y="90" width="15" height="25" rx="2"/>
+  </g>
+  
+  <!-- Accent dot -->
+  <circle cx="155" cy="100" r="8" fill="url(#grad2)"/>
+</svg>

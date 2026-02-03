@@ -37,7 +37,7 @@ interface ShopAnalytics {
   approved_checkins: number;
   conversions: number;
   last_visit: string;
-  latest_photo: string | null;
+  latest_checkin_id: number | null;
 }
 
 interface ShopDetail {
@@ -51,8 +51,6 @@ interface ShopDetail {
   checkins: Array<{
     id: number;
     timestamp: string;
-    photo_path: string | null;
-    photo_base64: string | null;
     status: string;
     agent_id: number;
     converted: number;
@@ -318,12 +316,13 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
                       : '-'}
                   </TableCell>
                   <TableCell className="text-center">
-                    {shop.latest_photo ? (
+                    {shop.latest_checkin_id ? (
                       <img 
-                        src={`data:image/jpeg;base64,${shop.latest_photo}`}
+                        src={`${apiUrl}/api/photos/${shop.latest_checkin_id}`}
                         alt="Shop photo"
                         className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80"
                         onClick={() => fetchShopDetail(shop.id)}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     ) : (
                       <span className="text-slate-300">-</span>
@@ -441,13 +440,12 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
                               )}
                             </div>
                           </div>
-                          {checkin.photo_base64 && (
-                            <img 
-                              src={`data:image/jpeg;base64,${checkin.photo_base64}`}
-                              alt="Checkin photo"
-                              className="h-16 w-16 object-cover rounded"
-                            />
-                          )}
+                          <img 
+                            src={`${apiUrl}/api/photos/${checkin.id}`}
+                            alt="Checkin photo"
+                            className="h-16 w-16 object-cover rounded"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
                         </div>
                       </CardContent>
                     </Card>

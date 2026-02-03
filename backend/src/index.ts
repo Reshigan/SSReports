@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 
 interface Env {
   DB: D1Database;
+  PHOTOS: R2Bucket;
   MYSQL_HOST: string;
   MYSQL_PORT: string;
   MYSQL_DATABASE: string;
@@ -475,7 +476,7 @@ app.get('/api/shops-analytics', async (c) => {
         SUM(CASE WHEN c.status = 'APPROVED' THEN 1 ELSE 0 END) as approved_checkins,
         SUM(CASE WHEN vr.converted = 1 THEN 1 ELSE 0 END) as conversions,
         MAX(c.timestamp) as last_visit,
-        MAX(c.photo_base64) as latest_photo
+        MAX(c.id) as latest_checkin_id
       FROM shops s
       LEFT JOIN checkins c ON s.id = c.shop_id
       LEFT JOIN visit_responses vr ON c.id = vr.checkin_id
@@ -511,10 +512,8 @@ app.get('/api/customers-analytics', async (c) => {
   try {
     const customers = await c.env.DB.prepare(`
       SELECT 
-        vr.checkin_id,
         c.id as checkin_id,
         c.timestamp,
-        c.photo_base64,
         c.latitude,
         c.longitude,
         c.agent_id,
@@ -563,7 +562,7 @@ app.get('/api/customer/:checkinId', async (c) => {
       SELECT 
         vr.*,
         c.timestamp,
-        c.photo_base64,
+        c.id as checkin_id,
         c.latitude,
         c.longitude,
         c.agent_id,
@@ -588,6 +587,29 @@ app.get('/api/customer/:checkinId', async (c) => {
   } catch (error) {
     console.error('Get customer error:', error);
     return c.json({ error: 'Failed to fetch customer' }, 500);
+  }
+});
+
+// Serve photos from R2
+app.get('/api/photos/:checkinId', async (c) => {
+  const checkinId = c.req.param('checkinId');
+  
+  try {
+    const key = `checkins/${checkinId}.jpg`;
+    const object = await c.env.PHOTOS.get(key);
+    
+    if (!object) {
+      return c.json({ error: 'Photo not found' }, 404);
+    }
+    
+    const headers = new Headers();
+    headers.set('Content-Type', 'image/jpeg');
+    headers.set('Cache-Control', 'public, max-age=31536000');
+    
+    return new Response(object.body, { headers });
+  } catch (error) {
+    console.error('Get photo error:', error);
+    return c.json({ error: 'Failed to fetch photo' }, 500);
   }
 });
 
