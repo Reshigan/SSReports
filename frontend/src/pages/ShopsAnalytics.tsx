@@ -320,7 +320,10 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
                       <img 
                         src={`${apiUrl}/api/photos/${shop.latest_checkin_id}`}
                         alt="Shop photo"
-                        className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80"
+                        loading="lazy"
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80 inline-block bg-slate-100"
                         onClick={() => fetchShopDetail(shop.id)}
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
@@ -443,7 +446,10 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
                           <img 
                             src={`${apiUrl}/api/photos/${checkin.id}`}
                             alt="Checkin photo"
-                            className="h-16 w-16 object-cover rounded"
+                            loading="lazy"
+                            width={64}
+                            height={64}
+                            className="h-16 w-16 object-cover rounded bg-slate-100"
                             onError={(e) => { e.currentTarget.style.display = 'none'; }}
                           />
                         </div>
