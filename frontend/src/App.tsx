@@ -7,7 +7,9 @@ import {
   FileText, 
   LogOut,
   Menu,
-  X
+  X,
+  Store,
+  UserCheck
 } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import MapView from './pages/MapView';
@@ -15,6 +17,8 @@ import CheckinsList from './pages/CheckinsList';
 import UserManagement from './pages/UserManagement';
 import Reports from './pages/Reports';
 import Login from './pages/Login';
+import ShopsAnalytics from './pages/ShopsAnalytics';
+import CustomersAnalytics from './pages/CustomersAnalytics';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
 
@@ -29,13 +33,15 @@ function Sidebar({ user, onLogout }: { user: User; onLogout: () => void }) {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
-  const navItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/map', icon: Map, label: 'Map View' },
-    { path: '/checkins', icon: FileText, label: 'Checkins' },
-    { path: '/reports', icon: FileText, label: 'Reports' },
-    { path: '/users', icon: Users, label: 'Users' },
-  ];
+    const navItems = [
+      { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+      { path: '/shops', icon: Store, label: 'Shops' },
+      { path: '/customers', icon: UserCheck, label: 'Customers' },
+      { path: '/map', icon: Map, label: 'Map View' },
+      { path: '/checkins', icon: FileText, label: 'Checkins' },
+      { path: '/reports', icon: FileText, label: 'Reports' },
+      { path: '/users', icon: Users, label: 'Users' },
+    ];
 
   return (
     <>
@@ -145,12 +151,14 @@ function AppContent() {
       <Sidebar user={user} onLogout={handleLogout} />
       <main className="flex-1 p-4 lg:p-8 pt-16 lg:pt-8 overflow-auto">
         <Routes>
-          <Route path="/" element={<Dashboard apiUrl={API_URL} />} />
-          <Route path="/map" element={<MapView apiUrl={API_URL} />} />
-          <Route path="/checkins" element={<CheckinsList apiUrl={API_URL} />} />
-          <Route path="/reports" element={<Reports apiUrl={API_URL} />} />
-          <Route path="/users" element={<UserManagement apiUrl={API_URL} />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+                    <Route path="/" element={<Dashboard apiUrl={API_URL} />} />
+                    <Route path="/shops" element={<ShopsAnalytics apiUrl={API_URL} />} />
+                    <Route path="/customers" element={<CustomersAnalytics apiUrl={API_URL} />} />
+                    <Route path="/map" element={<MapView apiUrl={API_URL} />} />
+                    <Route path="/checkins" element={<CheckinsList apiUrl={API_URL} />} />
+                    <Route path="/reports" element={<Reports apiUrl={API_URL} />} />
+                    <Route path="/users" element={<UserManagement apiUrl={API_URL} />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>

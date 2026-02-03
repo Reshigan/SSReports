@@ -424,6 +424,173 @@ app.get('/api/agents', async (c) => {
   }
 });
 
+app.get('/api/shops/:id', async (c) => {
+  const id = c.req.param('id');
+  
+  try {
+    const shop = await c.env.DB.prepare(
+      'SELECT * FROM shops WHERE id = ?'
+    ).bind(id).first();
+    
+    if (!shop) {
+      return c.json({ error: 'Shop not found' }, 404);
+    }
+    
+    const checkins = await c.env.DB.prepare(`
+      SELECT c.*, vr.converted, vr.already_betting, vr.responses
+      FROM checkins c
+      LEFT JOIN visit_responses vr ON c.id = vr.checkin_id
+      WHERE c.shop_id = ?
+      ORDER BY c.timestamp DESC
+      LIMIT 100
+    `).bind(id).all();
+    
+    const stats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total_checkins,
+        SUM(CASE WHEN c.status = 'APPROVED' THEN 1 ELSE 0 END) as approved,
+        SUM(CASE WHEN vr.converted = 1 THEN 1 ELSE 0 END) as conversions
+      FROM checkins c
+      LEFT JOIN visit_responses vr ON c.id = vr.checkin_id
+      WHERE c.shop_id = ?
+    `).bind(id).first();
+    
+    return c.json({ shop, checkins: checkins.results, stats });
+  } catch (error) {
+    console.error('Get shop error:', error);
+    return c.json({ error: 'Failed to fetch shop' }, 500);
+  }
+});
+
+app.get('/api/shops-analytics', async (c) => {
+  const page = parseInt(c.req.query('page') || '1');
+  const limit = parseInt(c.req.query('limit') || '20');
+  const offset = (page - 1) * limit;
+  
+  try {
+    const shops = await c.env.DB.prepare(`
+      SELECT 
+        s.id, s.name, s.address, s.latitude, s.longitude,
+        COUNT(c.id) as total_checkins,
+        SUM(CASE WHEN c.status = 'APPROVED' THEN 1 ELSE 0 END) as approved_checkins,
+        SUM(CASE WHEN vr.converted = 1 THEN 1 ELSE 0 END) as conversions,
+        MAX(c.timestamp) as last_visit,
+        MAX(c.photo_path) as latest_photo
+      FROM shops s
+      LEFT JOIN checkins c ON s.id = c.shop_id
+      LEFT JOIN visit_responses vr ON c.id = vr.checkin_id
+      GROUP BY s.id, s.name, s.address, s.latitude, s.longitude
+      HAVING total_checkins > 0
+      ORDER BY total_checkins DESC
+      LIMIT ? OFFSET ?
+    `).bind(limit, offset).all();
+    
+    const total = await c.env.DB.prepare(`
+      SELECT COUNT(DISTINCT s.id) as count 
+      FROM shops s
+      INNER JOIN checkins c ON s.id = c.shop_id
+    `).first();
+    
+    return c.json({ 
+      shops: shops.results, 
+      total: total?.count || 0,
+      page,
+      limit
+    });
+  } catch (error) {
+    console.error('Get shops analytics error:', error);
+    return c.json({ error: 'Failed to fetch shops analytics' }, 500);
+  }
+});
+
+app.get('/api/customers-analytics', async (c) => {
+  const page = parseInt(c.req.query('page') || '1');
+  const limit = parseInt(c.req.query('limit') || '20');
+  const offset = (page - 1) * limit;
+  
+  try {
+    const customers = await c.env.DB.prepare(`
+      SELECT 
+        vr.checkin_id,
+        c.id as checkin_id,
+        c.timestamp,
+        c.photo_path,
+        c.latitude,
+        c.longitude,
+        c.agent_id,
+        ap.agent_name,
+        s.name as shop_name,
+        s.id as shop_id,
+        vr.responses,
+        vr.converted,
+        vr.already_betting
+      FROM visit_responses vr
+      INNER JOIN checkins c ON vr.checkin_id = c.id
+      LEFT JOIN shops s ON c.shop_id = s.id
+      LEFT JOIN agent_performance ap ON c.agent_id = ap.agent_id
+      ORDER BY c.timestamp DESC
+      LIMIT ? OFFSET ?
+    `).bind(limit, offset).all();
+    
+    const total = await c.env.DB.prepare('SELECT COUNT(*) as count FROM visit_responses').first();
+    
+    const stats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total_customers,
+        SUM(CASE WHEN converted = 1 THEN 1 ELSE 0 END) as converted,
+        SUM(CASE WHEN already_betting = 1 THEN 1 ELSE 0 END) as already_betting
+      FROM visit_responses
+    `).first();
+    
+    return c.json({ 
+      customers: customers.results, 
+      total: total?.count || 0,
+      stats,
+      page,
+      limit
+    });
+  } catch (error) {
+    console.error('Get customers analytics error:', error);
+    return c.json({ error: 'Failed to fetch customers analytics' }, 500);
+  }
+});
+
+app.get('/api/customer/:checkinId', async (c) => {
+  const checkinId = c.req.param('checkinId');
+  
+  try {
+    const customer = await c.env.DB.prepare(`
+      SELECT 
+        vr.*,
+        c.timestamp,
+        c.photo_path,
+        c.latitude,
+        c.longitude,
+        c.agent_id,
+        c.status,
+        c.notes,
+        ap.agent_name,
+        s.name as shop_name,
+        s.address as shop_address,
+        s.id as shop_id
+      FROM visit_responses vr
+      INNER JOIN checkins c ON vr.checkin_id = c.id
+      LEFT JOIN shops s ON c.shop_id = s.id
+      LEFT JOIN agent_performance ap ON c.agent_id = ap.agent_id
+      WHERE vr.checkin_id = ?
+    `).bind(checkinId).first();
+    
+    if (!customer) {
+      return c.json({ error: 'Customer record not found' }, 404);
+    }
+    
+    return c.json({ customer });
+  } catch (error) {
+    console.error('Get customer error:', error);
+    return c.json({ error: 'Failed to fetch customer' }, 500);
+  }
+});
+
 app.get('/api/export/checkins', async (c) => {
   const startDate = c.req.query('startDate');
   const endDate = c.req.query('endDate');
