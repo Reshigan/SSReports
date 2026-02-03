@@ -32,11 +32,12 @@ async function seedData() {
     sql += `INSERT OR REPLACE INTO shops (id, name, address, latitude, longitude) VALUES (${shop.id}, '${name}', '${address}', ${shop.latitude || 0}, ${shop.longitude || 0});\n`;
   }
   
-  // Checkins (batch in chunks)
+  // Checkins (batch in chunks) - Note: photo_base64 is skipped due to D1 size limits
   console.log('Generating checkins SQL...');
   for (const checkin of checkins) {
     const notes = (checkin.notes || '').replace(/'/g, "''");
     const photoPath = (checkin.photo_path || '').replace(/'/g, "''");
+    // Skip photo_base64 and additional_photos_base64 due to D1 upload size limits (373MB+)
     sql += `INSERT OR REPLACE INTO checkins (id, agent_id, shop_id, timestamp, latitude, longitude, photo_path, notes, status, brand_id, category_id, product_id) VALUES (${checkin.id}, ${checkin.agent_id || 'NULL'}, ${checkin.shop_id || 'NULL'}, '${checkin.timestamp}', ${checkin.latitude || 0}, ${checkin.longitude || 0}, '${photoPath}', '${notes}', '${checkin.status || 'PENDING'}', ${checkin.brand_id || 'NULL'}, ${checkin.category_id || 'NULL'}, ${checkin.product_id || 'NULL'});\n`;
   }
   

@@ -18,10 +18,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { 
-  Users, Store, Calendar, TrendingUp, Image, ChevronLeft, ChevronRight,
+  Users, Store, Calendar, TrendingUp, ChevronLeft, ChevronRight,
   Eye, CheckCircle, XCircle, UserCheck
 } from 'lucide-react';
-import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 interface CustomersAnalyticsProps {
   apiUrl: string;
@@ -31,6 +31,7 @@ interface CustomerRecord {
   checkin_id: number;
   timestamp: string;
   photo_path: string | null;
+  photo_base64: string | null;
   latitude: number;
   longitude: number;
   agent_id: number;
@@ -46,6 +47,7 @@ interface CustomerDetail {
   checkin_id: number;
   timestamp: string;
   photo_path: string | null;
+  photo_base64: string | null;
   latitude: number;
   longitude: number;
   agent_id: number;
@@ -221,18 +223,18 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
                 <Pie
                   data={conversionData}
                   cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
+                  cy="40%"
+                  innerRadius={50}
+                  outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {conversionData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => value.toLocaleString()} />
+                <Legend verticalAlign="bottom" height={36} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -251,18 +253,18 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
                 <Pie
                   data={bettingData}
                   cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
+                  cy="40%"
+                  innerRadius={50}
+                  outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {bettingData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => value.toLocaleString()} />
+                <Legend verticalAlign="bottom" height={36} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -339,15 +341,13 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
                     )}
                   </TableCell>
                   <TableCell className="text-center">
-                    {customer.photo_path ? (
-                      <a 
-                        href={customer.photo_path} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-blue-600 hover:text-blue-800"
-                      >
-                        <Image className="h-4 w-4" />
-                      </a>
+                    {customer.photo_base64 ? (
+                      <img 
+                        src={`data:image/jpeg;base64,${customer.photo_base64}`}
+                        alt="Customer photo"
+                        className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80"
+                        onClick={() => fetchCustomerDetail(customer.checkin_id)}
+                      />
                     ) : (
                       <span className="text-slate-300">-</span>
                     )}
@@ -449,18 +449,14 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
                 </Card>
               </div>
 
-              {selectedCustomer.photo_path && (
+              {selectedCustomer.photo_base64 && (
                 <div>
                   <h4 className="font-semibold mb-2">Photo Proof</h4>
-                  <a 
-                    href={selectedCustomer.photo_path} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 p-3 bg-blue-50 rounded-lg"
-                  >
-                    <Image className="h-5 w-5" />
-                    View Photo Evidence
-                  </a>
+                  <img 
+                    src={`data:image/jpeg;base64,${selectedCustomer.photo_base64}`}
+                    alt="Photo evidence"
+                    className="max-w-full h-auto rounded-lg shadow-md"
+                  />
                 </div>
               )}
 

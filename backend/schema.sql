@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS checkins (
   latitude REAL,
   longitude REAL,
   photo_path TEXT,
+  photo_base64 TEXT,
+  additional_photos_base64 TEXT,
   notes TEXT,
   status TEXT,
   brand_id INTEGER,

@@ -43,7 +43,8 @@ def export_data():
         print("Exporting checkins...")
         checkins = pd.read_sql(text("""
             SELECT id, agent_id, shop_id, timestamp, latitude, longitude, 
-                   photo_path, notes, status, brand_id, category_id, product_id
+                   photo_path, photo_base64, additional_photos_base64,
+                   notes, status, brand_id, category_id, product_id
             FROM checkins
         """), conn)
         checkins['timestamp'] = checkins['timestamp'].astype(str)

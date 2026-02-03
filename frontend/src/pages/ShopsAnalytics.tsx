@@ -18,10 +18,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { 
-  Store, MapPin, Calendar, TrendingUp, Image, ChevronLeft, ChevronRight,
+  Store, MapPin, Calendar, TrendingUp, ChevronLeft, ChevronRight,
   Eye, CheckCircle, Users
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 interface ShopsAnalyticsProps {
   apiUrl: string;
@@ -52,6 +52,7 @@ interface ShopDetail {
     id: number;
     timestamp: string;
     photo_path: string | null;
+    photo_base64: string | null;
     status: string;
     agent_id: number;
     converted: number;
@@ -240,18 +241,18 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
                 <Pie
                   data={pieData}
                   cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
+                  cy="40%"
+                  innerRadius={50}
+                  outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
                   {pieData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => value.toLocaleString()} />
+                <Legend verticalAlign="bottom" height={36} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -318,14 +319,12 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
                   </TableCell>
                   <TableCell className="text-center">
                     {shop.latest_photo ? (
-                      <a 
-                        href={shop.latest_photo} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-blue-600 hover:text-blue-800"
-                      >
-                        <Image className="h-4 w-4" />
-                      </a>
+                      <img 
+                        src={`data:image/jpeg;base64,${shop.latest_photo}`}
+                        alt="Shop photo"
+                        className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80"
+                        onClick={() => fetchShopDetail(shop.id)}
+                      />
                     ) : (
                       <span className="text-slate-300">-</span>
                     )}
@@ -442,16 +441,12 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
                               )}
                             </div>
                           </div>
-                          {checkin.photo_path && (
-                            <a 
-                              href={checkin.photo_path} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              <Image className="h-4 w-4" />
-                              View Photo
-                            </a>
+                          {checkin.photo_base64 && (
+                            <img 
+                              src={`data:image/jpeg;base64,${checkin.photo_base64}`}
+                              alt="Checkin photo"
+                              className="h-16 w-16 object-cover rounded"
+                            />
                           )}
                         </div>
                       </CardContent>
