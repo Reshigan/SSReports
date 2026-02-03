@@ -143,16 +143,32 @@ app.delete('/api/users/:id', async (c) => {
 });
 
 app.get('/api/dashboard/kpis', async (c) => {
+  const startDate = c.req.query('startDate');
+  const endDate = c.req.query('endDate');
+  
   try {
+    let dateFilter = '';
+    let dateFilterVR = '';
+    if (startDate && endDate) {
+      dateFilter = `WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate}'`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate}')`;
+    } else if (startDate) {
+      dateFilter = `WHERE timestamp >= '${startDate}'`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}')`;
+    } else if (endDate) {
+      dateFilter = `WHERE timestamp <= '${endDate}'`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp <= '${endDate}')`;
+    }
+    
     const kpis = await c.env.DB.prepare(`
       SELECT 
-        (SELECT COUNT(*) FROM checkins) as total_checkins,
-        (SELECT COUNT(*) FROM checkins WHERE status = 'APPROVED') as approved_checkins,
-        (SELECT COUNT(*) FROM checkins WHERE status = 'PENDING') as pending_checkins,
-        (SELECT COUNT(DISTINCT agent_id) FROM checkins) as active_agents,
+        (SELECT COUNT(*) FROM checkins ${dateFilter}) as total_checkins,
+        (SELECT COUNT(*) FROM checkins ${dateFilter ? dateFilter + " AND status = 'APPROVED'" : "WHERE status = 'APPROVED'"}) as approved_checkins,
+        (SELECT COUNT(*) FROM checkins ${dateFilter ? dateFilter + " AND status = 'PENDING'" : "WHERE status = 'PENDING'"}) as pending_checkins,
+        (SELECT COUNT(DISTINCT agent_id) FROM checkins ${dateFilter}) as active_agents,
         (SELECT COUNT(*) FROM shops) as total_shops,
-        (SELECT COUNT(*) FROM visit_responses WHERE converted = 1) as conversions,
-        (SELECT COUNT(*) FROM visit_responses) as total_visits
+        (SELECT COUNT(*) FROM visit_responses ${dateFilterVR ? dateFilterVR + ' AND converted = 1' : 'WHERE converted = 1'}) as conversions,
+        (SELECT COUNT(*) FROM visit_responses ${dateFilterVR}) as total_visits
     `).first();
     
     return c.json({ kpis });
@@ -239,14 +255,26 @@ app.get('/api/dashboard/agent-performance', async (c) => {
 });
 
 app.get('/api/dashboard/conversion-stats', async (c) => {
+  const startDate = c.req.query('startDate');
+  const endDate = c.req.query('endDate');
+  
   try {
+    let dateFilter = '';
+    if (startDate && endDate) {
+      dateFilter = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate}')`;
+    } else if (startDate) {
+      dateFilter = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}')`;
+    } else if (endDate) {
+      dateFilter = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp <= '${endDate}')`;
+    }
+    
     const result = await c.env.DB.prepare(`
       SELECT 
         SUM(CASE WHEN converted = 1 THEN 1 ELSE 0 END) as converted_yes,
         SUM(CASE WHEN converted = 0 THEN 1 ELSE 0 END) as converted_no,
         SUM(CASE WHEN already_betting = 1 THEN 1 ELSE 0 END) as betting_yes,
         SUM(CASE WHEN already_betting = 0 THEN 1 ELSE 0 END) as betting_no
-      FROM visit_responses
+      FROM visit_responses ${dateFilter}
     `).first();
     
     return c.json({ data: result });
@@ -467,8 +495,19 @@ app.get('/api/shops-analytics', async (c) => {
   const page = parseInt(c.req.query('page') || '1');
   const limit = parseInt(c.req.query('limit') || '20');
   const offset = (page - 1) * limit;
+  const startDate = c.req.query('startDate');
+  const endDate = c.req.query('endDate');
   
   try {
+    let dateFilter = '';
+    if (startDate && endDate) {
+      dateFilter = `AND c.timestamp >= '${startDate}' AND c.timestamp <= '${endDate}'`;
+    } else if (startDate) {
+      dateFilter = `AND c.timestamp >= '${startDate}'`;
+    } else if (endDate) {
+      dateFilter = `AND c.timestamp <= '${endDate}'`;
+    }
+    
     const shops = await c.env.DB.prepare(`
       SELECT 
         s.id, s.name, s.address, s.latitude, s.longitude,
@@ -478,7 +517,7 @@ app.get('/api/shops-analytics', async (c) => {
         MAX(c.timestamp) as last_visit,
         MAX(c.id) as latest_checkin_id
       FROM shops s
-      LEFT JOIN checkins c ON s.id = c.shop_id
+      LEFT JOIN checkins c ON s.id = c.shop_id ${dateFilter}
       LEFT JOIN visit_responses vr ON c.id = vr.checkin_id
       GROUP BY s.id, s.name, s.address, s.latitude, s.longitude
       HAVING total_checkins > 0
@@ -489,7 +528,7 @@ app.get('/api/shops-analytics', async (c) => {
     const total = await c.env.DB.prepare(`
       SELECT COUNT(DISTINCT s.id) as count 
       FROM shops s
-      INNER JOIN checkins c ON s.id = c.shop_id
+      INNER JOIN checkins c ON s.id = c.shop_id ${dateFilter ? dateFilter.replace('AND', 'WHERE') : ''}
     `).first();
     
     return c.json({ 
@@ -508,8 +547,23 @@ app.get('/api/customers-analytics', async (c) => {
   const page = parseInt(c.req.query('page') || '1');
   const limit = parseInt(c.req.query('limit') || '20');
   const offset = (page - 1) * limit;
+  const startDate = c.req.query('startDate');
+  const endDate = c.req.query('endDate');
   
   try {
+    let dateFilter = '';
+    let dateFilterVR = '';
+    if (startDate && endDate) {
+      dateFilter = `AND c.timestamp >= '${startDate}' AND c.timestamp <= '${endDate}'`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate}')`;
+    } else if (startDate) {
+      dateFilter = `AND c.timestamp >= '${startDate}'`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}')`;
+    } else if (endDate) {
+      dateFilter = `AND c.timestamp <= '${endDate}'`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp <= '${endDate}')`;
+    }
+    
     const customers = await c.env.DB.prepare(`
       SELECT 
         c.id as checkin_id,
@@ -524,21 +578,21 @@ app.get('/api/customers-analytics', async (c) => {
         vr.converted,
         vr.already_betting
       FROM visit_responses vr
-      INNER JOIN checkins c ON vr.checkin_id = c.id
+      INNER JOIN checkins c ON vr.checkin_id = c.id ${dateFilter}
       LEFT JOIN shops s ON c.shop_id = s.id
       LEFT JOIN agent_performance ap ON c.agent_id = ap.agent_id
       ORDER BY c.timestamp DESC
       LIMIT ? OFFSET ?
     `).bind(limit, offset).all();
     
-    const total = await c.env.DB.prepare('SELECT COUNT(*) as count FROM visit_responses').first();
+    const total = await c.env.DB.prepare(`SELECT COUNT(*) as count FROM visit_responses ${dateFilterVR}`).first();
     
     const stats = await c.env.DB.prepare(`
       SELECT 
         COUNT(*) as total_customers,
         SUM(CASE WHEN converted = 1 THEN 1 ELSE 0 END) as converted,
         SUM(CASE WHEN already_betting = 1 THEN 1 ELSE 0 END) as already_betting
-      FROM visit_responses
+      FROM visit_responses ${dateFilterVR}
     `).first();
     
     return c.json({ 
