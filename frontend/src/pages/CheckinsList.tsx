@@ -41,6 +41,11 @@ interface Checkin {
   product_id: number;
 }
 
+interface Agent {
+  agent_id: number;
+  agent_name: string;
+}
+
 interface VisitResponse {
   id: number;
   checkin_id: number;
@@ -64,10 +69,30 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
   const [selectedCheckin, setSelectedCheckin] = useState<Checkin | null>(null);
   const [checkinDetails, setCheckinDetails] = useState<{ checkin: Checkin; response: VisitResponse | null } | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const [agents, setAgents] = useState<Agent[]>([]);
+
+  useEffect(() => {
+    fetchAgents();
+  }, []);
 
   useEffect(() => {
     fetchCheckins();
   }, [page]);
+
+  const fetchAgents = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/api/agents`);
+      const data = await response.json();
+      setAgents(data.agents || []);
+    } catch (error) {
+      console.error('Failed to fetch agents:', error);
+    }
+  };
+
+  const getAgentName = (agentId: number) => {
+    const agent = agents.find(a => a.agent_id === agentId);
+    return agent?.agent_name || `Agent ${agentId}`;
+  };
 
   const fetchCheckins = async () => {
     setLoading(true);
@@ -187,17 +212,22 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
                 <option value="FLAGGED">Flagged</option>
               </select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="agentId">Agent ID</Label>
-              <Input
-                id="agentId"
-                type="number"
-                placeholder="Agent ID"
-                value={agentId}
-                onChange={(e) => setAgentId(e.target.value)}
-                className="w-32"
-              />
-            </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="agentId">Agent</Label>
+                          <select
+                            id="agentId"
+                            value={agentId}
+                            onChange={(e) => setAgentId(e.target.value)}
+                            className="w-48 h-10 px-3 rounded-md border border-input bg-background"
+                          >
+                            <option value="">All Agents</option>
+                            {agents.map((agent) => (
+                              <option key={agent.agent_id} value={agent.agent_id}>
+                                {agent.agent_name || `Agent ${agent.agent_id}`}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
             <Button onClick={handleFilter} className="bg-emerald-600 hover:bg-emerald-700">
               Apply Filters
             </Button>
@@ -229,12 +259,12 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
                   {checkins.map((checkin) => (
                     <TableRow key={checkin.id}>
                       <TableCell className="font-medium">#{checkin.id}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-slate-400" />
-                          {checkin.agent_id}
-                        </div>
-                      </TableCell>
+                                            <TableCell>
+                                              <div className="flex items-center gap-2">
+                                                <User className="h-4 w-4 text-slate-400" />
+                                                {getAgentName(checkin.agent_id)}
+                                              </div>
+                                            </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-slate-400" />

@@ -12,7 +12,7 @@ JWT_SECRET = "ssreports-jwt-secret-key-2024"
 [[d1_databases]]
 binding = "DB"
 database_name = "ssreports-db"
-database_id = "placeholder-will-be-updated"
+database_id = "8312a7c3-1334-46a9-b980-7dd8ce6392ca"
 
 [env.production]
 routes = [
