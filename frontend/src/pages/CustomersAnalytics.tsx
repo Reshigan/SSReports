@@ -43,6 +43,18 @@ interface CustomerRecord {
   already_betting: number;
 }
 
+const getCustomerName = (responses: string): string => {
+  try {
+    const data = JSON.parse(responses || '{}');
+    const firstName = data?.consumerDetails?.consumerName || '';
+    const lastName = data?.consumerDetails?.consumerSurname || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    return fullName || 'Unknown';
+  } catch {
+    return 'Unknown';
+  }
+};
+
 interface CustomerDetail {
   checkin_id: number;
   timestamp: string;
@@ -147,10 +159,11 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
 
   const totalPages = Math.ceil(total / limit);
 
-  const filteredCustomers = customers.filter(customer => 
-    customer.shop_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.agent_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    const filteredCustomers = customers.filter(customer => 
+      customer.shop_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.agent_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getCustomerName(customer.responses).toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   const conversionData = [
     { name: 'Converted', value: stats?.converted || 0 },
@@ -314,7 +327,7 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
               Customer Records
             </CardTitle>
             <Input
-              placeholder="Search by shop or agent..."
+              placeholder="Search by customer, shop or agent..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-64"
@@ -323,35 +336,42 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
         </CardHeader>
         <CardContent>
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Shop</TableHead>
-                <TableHead>Agent</TableHead>
-                <TableHead className="text-center">Converted</TableHead>
-                <TableHead className="text-center">Already Betting</TableHead>
-                <TableHead className="text-center">Photo</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Customer Name</TableHead>
+                            <TableHead>Shop</TableHead>
+                            <TableHead>Agent</TableHead>
+                            <TableHead className="text-center">Converted</TableHead>
+                            <TableHead className="text-center">Already Betting</TableHead>
+                            <TableHead className="text-center">Photo</TableHead>
+                            <TableHead className="text-center">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
             <TableBody>
               {filteredCustomers.map((customer) => (
                 <TableRow key={customer.checkin_id}>
-                  <TableCell className="text-sm">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-slate-400" />
-                      {new Date(customer.timestamp).toLocaleDateString()}
-                    </div>
-                    <span className="text-xs text-slate-400">
-                      {new Date(customer.timestamp).toLocaleTimeString()}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Store className="h-4 w-4 text-slate-400" />
-                      <span className="font-medium">{customer.shop_name || `Shop #${customer.shop_id}`}</span>
-                    </div>
-                  </TableCell>
+                                    <TableCell className="text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <Calendar className="h-4 w-4 text-slate-400" />
+                                        {new Date(customer.timestamp).toLocaleDateString()}
+                                      </div>
+                                      <span className="text-xs text-slate-400">
+                                        {new Date(customer.timestamp).toLocaleTimeString()}
+                                      </span>
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        <Users className="h-4 w-4 text-slate-400" />
+                                        <span className="font-medium">{getCustomerName(customer.responses)}</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        <Store className="h-4 w-4 text-slate-400" />
+                                        <span className="text-sm text-slate-600">{customer.shop_name || `Shop #${customer.shop_id}`}</span>
+                                      </div>
+                                    </TableCell>
                   <TableCell className="text-slate-600">
                     {customer.agent_name || `Agent ${customer.agent_id}`}
                   </TableCell>
