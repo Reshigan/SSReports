@@ -9,6 +9,7 @@ import {
   TrendingUp, Users, MapPin, CheckCircle, Clock, Target,
   Calendar, Activity
 } from 'lucide-react';
+import DateRangeFilter from '@/components/DateRangeFilter';
 
 interface DashboardProps {
   apiUrl: string;
@@ -59,6 +60,8 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [conversionStats, setConversionStats] = useState<ConversionStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
@@ -66,12 +69,17 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
 
   const fetchDashboardData = async () => {
     try {
+      const dateParams = new URLSearchParams();
+      if (startDate) dateParams.append('startDate', startDate);
+      if (endDate) dateParams.append('endDate', endDate);
+      const queryString = dateParams.toString() ? `?${dateParams.toString()}` : '';
+
       const [kpisRes, agentsRes, hourlyRes, dailyRes, conversionRes] = await Promise.all([
-        fetch(`${apiUrl}/api/dashboard/kpis`),
-        fetch(`${apiUrl}/api/dashboard/agent-performance`),
-        fetch(`${apiUrl}/api/dashboard/checkins-by-hour`),
-        fetch(`${apiUrl}/api/dashboard/checkins-by-day`),
-        fetch(`${apiUrl}/api/dashboard/conversion-stats`),
+        fetch(`${apiUrl}/api/dashboard/kpis${queryString}`),
+        fetch(`${apiUrl}/api/dashboard/agent-performance${queryString}`),
+        fetch(`${apiUrl}/api/dashboard/checkins-by-hour${queryString}`),
+        fetch(`${apiUrl}/api/dashboard/checkins-by-day${queryString}`),
+        fetch(`${apiUrl}/api/dashboard/conversion-stats${queryString}`),
       ]);
 
       const [kpisData, agentsData, hourlyDataRes, dailyDataRes, conversionData] = await Promise.all([
@@ -92,6 +100,14 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDateFilter = () => {
+    fetchDashboardData();
+  };
+
+  const handleClearFilter = () => {
+    fetchDashboardData();
   };
 
   if (loading) {
@@ -136,6 +152,15 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
           Last updated: {new Date().toLocaleString()}
         </div>
       </div>
+
+      <DateRangeFilter
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onApply={handleDateFilter}
+        onClear={handleClearFilter}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">

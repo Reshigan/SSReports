@@ -22,6 +22,8 @@ import {
   Eye, CheckCircle, Users
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import PhotoModal from '@/components/PhotoModal';
+import DateRangeFilter from '@/components/DateRangeFilter';
 
 interface ShopsAnalyticsProps {
   apiUrl: string;
@@ -74,6 +76,13 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
   const [selectedShop, setSelectedShop] = useState<ShopDetail | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [photoModal, setPhotoModal] = useState<{ isOpen: boolean; url: string; title: string }>({
+    isOpen: false,
+    url: '',
+    title: '',
+  });
   const limit = 15;
 
   useEffect(() => {
@@ -83,7 +92,10 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
   const fetchShops = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/api/shops-analytics?page=${page}&limit=${limit}`);
+      let url = `${apiUrl}/api/shops-analytics?page=${page}&limit=${limit}`;
+      if (startDate) url += `&startDate=${startDate}`;
+      if (endDate) url += `&endDate=${endDate}`;
+      const res = await fetch(url);
       const data = await res.json();
       setShops(data.shops || []);
       setTotal(data.total || 0);
@@ -92,6 +104,24 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDateFilter = () => {
+    setPage(1);
+    fetchShops();
+  };
+
+  const handleClearFilter = () => {
+    setPage(1);
+    fetchShops();
+  };
+
+  const openPhotoModal = (checkinId: number, title: string) => {
+    setPhotoModal({
+      isOpen: true,
+      url: `${apiUrl}/api/photos/${checkinId}`,
+      title,
+    });
   };
 
   const fetchShopDetail = async (shopId: number) => {
@@ -145,6 +175,15 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
           <p className="text-slate-500 mt-1">Performance analysis by shop location</p>
         </div>
       </div>
+
+      <DateRangeFilter
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onApply={handleDateFilter}
+        onClear={handleClearFilter}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
@@ -324,7 +363,7 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
                         width={40}
                         height={40}
                         className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80 inline-block bg-slate-100"
-                        onClick={() => fetchShopDetail(shop.id)}
+                        onClick={() => openPhotoModal(shop.latest_checkin_id!, shop.name || `Shop #${shop.id}`)}
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     ) : (
@@ -449,7 +488,8 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
                             loading="lazy"
                             width={64}
                             height={64}
-                            className="h-16 w-16 object-cover rounded bg-slate-100"
+                            className="h-16 w-16 object-cover rounded bg-slate-100 cursor-pointer hover:opacity-80"
+                            onClick={() => openPhotoModal(checkin.id, `${selectedShop?.shop?.name || 'Shop'} - ${new Date(checkin.timestamp).toLocaleDateString()}`)}
                             onError={(e) => { e.currentTarget.style.display = 'none'; }}
                           />
                         </div>
@@ -462,6 +502,13 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
           )}
         </DialogContent>
       </Dialog>
+
+      <PhotoModal
+        isOpen={photoModal.isOpen}
+        onClose={() => setPhotoModal({ isOpen: false, url: '', title: '' })}
+        photoUrl={photoModal.url}
+        title={photoModal.title}
+      />
     </div>
   );
 }

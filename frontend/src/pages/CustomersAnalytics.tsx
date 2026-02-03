@@ -22,6 +22,8 @@ import {
   Eye, CheckCircle, XCircle, UserCheck
 } from 'lucide-react';
 import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import PhotoModal from '@/components/PhotoModal';
+import DateRangeFilter from '@/components/DateRangeFilter';
 
 interface CustomersAnalyticsProps {
   apiUrl: string;
@@ -75,6 +77,13 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetail | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [photoModal, setPhotoModal] = useState<{ isOpen: boolean; url: string; title: string }>({
+    isOpen: false,
+    url: '',
+    title: '',
+  });
   const limit = 20;
 
   useEffect(() => {
@@ -84,7 +93,10 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${apiUrl}/api/customers-analytics?page=${page}&limit=${limit}`);
+      let url = `${apiUrl}/api/customers-analytics?page=${page}&limit=${limit}`;
+      if (startDate) url += `&startDate=${startDate}`;
+      if (endDate) url += `&endDate=${endDate}`;
+      const res = await fetch(url);
       const data = await res.json();
       setCustomers(data.customers || []);
       setTotal(data.total || 0);
@@ -94,6 +106,24 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDateFilter = () => {
+    setPage(1);
+    fetchCustomers();
+  };
+
+  const handleClearFilter = () => {
+    setPage(1);
+    fetchCustomers();
+  };
+
+  const openPhotoModal = (checkinId: number, title: string) => {
+    setPhotoModal({
+      isOpen: true,
+      url: `${apiUrl}/api/photos/${checkinId}`,
+      title,
+    });
   };
 
   const fetchCustomerDetail = async (checkinId: number) => {
@@ -152,6 +182,15 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
           <p className="text-slate-500 mt-1">Individual customer interaction analysis</p>
         </div>
       </div>
+
+      <DateRangeFilter
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onApply={handleDateFilter}
+        onClear={handleClearFilter}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
@@ -344,7 +383,7 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
                       width={40}
                       height={40}
                       className="h-10 w-10 object-cover rounded cursor-pointer hover:opacity-80 inline-block bg-slate-100"
-                      onClick={() => fetchCustomerDetail(customer.checkin_id)}
+                      onClick={() => openPhotoModal(customer.checkin_id, `${customer.shop_name || 'Shop'} - ${new Date(customer.timestamp).toLocaleDateString()}`)}
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                   </TableCell>
@@ -451,7 +490,8 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
                   src={`${apiUrl}/api/photos/${selectedCustomer.checkin_id}`}
                   alt="Photo evidence"
                   loading="lazy"
-                  className="max-w-full max-h-96 w-auto h-auto rounded-lg shadow-md object-contain bg-slate-100"
+                  className="max-w-full max-h-96 w-auto h-auto rounded-lg shadow-md object-contain bg-slate-100 cursor-pointer hover:opacity-80"
+                  onClick={() => openPhotoModal(selectedCustomer.checkin_id, `${selectedCustomer.shop_name || 'Shop'} - ${new Date(selectedCustomer.timestamp).toLocaleDateString()}`)}
                   onError={(e) => { e.currentTarget.parentElement!.style.display = 'none'; }}
                 />
               </div>
@@ -482,6 +522,13 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
           )}
         </DialogContent>
       </Dialog>
+
+      <PhotoModal
+        isOpen={photoModal.isOpen}
+        onClose={() => setPhotoModal({ isOpen: false, url: '', title: '' })}
+        photoUrl={photoModal.url}
+        title={photoModal.title}
+      />
     </div>
   );
 }
