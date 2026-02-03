@@ -4,7 +4,7 @@
 Build a comprehensive reporting platform for SalesSync data with KPIs, maps, store points, user management, and exportable reports. Deploy on Cloudflare Workers with D1 database at ss.vantax.co.za.
 
 ## Data Source
-- MySQL Database: mysql+pymysql://dev:Developer1234#@13.244.241.5:3306/salessync
+- MySQL Database: Connection string stored in DATABASE_URI environment variable
 - Tables: checkins (15,003), visit_responses (15,003), shops (1,337), users (32), brands, categories, products, goals
 
 ## Key Features
@@ -52,5 +52,4 @@ Build a comprehensive reporting platform for SalesSync data with KPIs, maps, sto
 
 ## Deployment
 - Domain: ss.vantax.co.za
-- Cloudflare account: reshigan@vantax.co.za
-- Global API Key: 21fff817fa4a851d0ddc3975c7f8c1a31fbc4
+- Cloudflare account credentials stored securely (not in repo)
