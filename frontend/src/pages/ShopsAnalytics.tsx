@@ -462,7 +462,28 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
               </div>
 
               <div>
-                <h4 className="font-semibold mb-3">Recent Visits & Photos</h4>
+                <h4 className="font-semibold mb-3">All Photos ({selectedShop.checkins?.length || 0} visits)</h4>
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
+                  {selectedShop.checkins?.map((checkin) => (
+                    <div key={checkin.id} className="relative group">
+                      <img 
+                        src={`${apiUrl}/api/photos/${checkin.id}`}
+                        alt="Checkin photo"
+                        loading="lazy"
+                        className="w-full h-24 object-cover rounded-lg bg-slate-100 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => openPhotoModal(checkin.id, `${selectedShop?.shop?.name || 'Shop'} - ${new Date(checkin.timestamp).toLocaleDateString()}`)}
+                        onError={(e) => { e.currentTarget.parentElement!.style.display = 'none'; }}
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                        {new Date(checkin.timestamp).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-3">Visit Details</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {selectedShop.checkins?.slice(0, 10).map((checkin) => (
                     <Card key={checkin.id} className="overflow-hidden">
