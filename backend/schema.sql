@@ -94,3 +94,7 @@ CREATE INDEX IF NOT EXISTS idx_visit_responses_checkin ON visit_responses(checki
 -- Insert default admin user (password: admin123)
 INSERT OR IGNORE INTO users (email, password_hash, name, role) 
 VALUES ('admin@ssreports.com', '240be518fabd2724ddb6f04eeb9d5b0e3a0e4e6f5c5c5c5c5c5c5c5c5c5c5c5c', 'Admin', 'admin');
+
+-- Insert goldrush user (password: goldrush)
+INSERT OR IGNORE INTO users (email, password_hash, name, role) 
+VALUES ('goldrush@ssreports.com', '2c6451a7bf9cf5b2aa91b1d20c8f729be95cb0db780cca946a860f047cb66573', 'Goldrush', 'viewer');
