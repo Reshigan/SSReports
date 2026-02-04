@@ -137,8 +137,6 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
     switch (status) {
       case 'APPROVED':
         return <Badge className="bg-blue-100 text-blue-800">Approved</Badge>;
-      case 'PENDING':
-        return <Badge className="bg-amber-100 text-amber-800">Pending</Badge>;
       case 'FLAGGED':
         return <Badge className="bg-red-100 text-red-800">Flagged</Badge>;
       default:
@@ -206,7 +204,6 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
             >
               <option value="">All</option>
               <option value="APPROVED">Approved</option>
-              <option value="PENDING">Pending</option>
               <option value="FLAGGED">Flagged</option>
             </select>
           </div>

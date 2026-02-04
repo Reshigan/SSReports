@@ -81,9 +81,7 @@ export default function MapView({ apiUrl }: MapViewProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return '#10b981';
-      case 'PENDING':
-        return '#f59e0b';
+        return '#3A57E8';
       case 'FLAGGED':
         return '#ef4444';
       default:
@@ -180,16 +178,16 @@ export default function MapView({ apiUrl }: MapViewProps) {
             </div>
           </div>
         </div>
-        <div className="kpi-card kpi-card-amber">
+        <div className="kpi-card kpi-card-purple">
           <div className="flex items-center justify-between relative z-10">
             <div>
-              <p className="text-slate-500 text-sm font-medium">Pending</p>
+              <p className="text-slate-500 text-sm font-medium">Unique Agents</p>
               <p className="text-3xl font-bold text-slate-800 mt-1">
-                {checkins.filter(c => c.status === 'PENDING').length}
+                {new Set(checkins.map(c => c.agent_id)).size}
               </p>
             </div>
-            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-              <MapPin className="h-6 w-6 text-amber-600" />
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <MapPin className="h-6 w-6 text-purple-600" />
             </div>
           </div>
         </div>
@@ -260,8 +258,7 @@ export default function MapView({ apiUrl }: MapViewProps) {
                         <h3 className="font-bold">Checkin #{checkin.id}</h3>
                         <p className="text-sm">Agent: {checkin.agent_id}</p>
                         <p className="text-sm">Status: <span className={`font-medium ${
-                          checkin.status === 'APPROVED' ? 'text-blue-600' : 
-                          checkin.status === 'PENDING' ? 'text-amber-600' : 'text-red-600'
+                          checkin.status === 'APPROVED' ? 'text-blue-600' : 'text-red-600'
                         }`}>{checkin.status}</span></p>
                         <p className="text-xs text-gray-400 mt-1">
                           {new Date(checkin.timestamp).toLocaleString()}
@@ -288,10 +285,6 @@ export default function MapView({ apiUrl }: MapViewProps) {
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full bg-blue-500"></div>
             <span className="text-sm text-slate-600">Approved Checkin</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-amber-500"></div>
-            <span className="text-sm text-slate-600">Pending Checkin</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full bg-red-500"></div>
