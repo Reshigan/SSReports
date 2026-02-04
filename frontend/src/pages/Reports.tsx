@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -230,7 +229,7 @@ export default function Reports({ apiUrl }: ReportsProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -244,186 +243,175 @@ export default function Reports({ apiUrl }: ReportsProps) {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Export Options
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-40"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-40"
-              />
-            </div>
-            <Button 
-              onClick={exportToExcel} 
-              className="bg-emerald-600 hover:bg-emerald-700"
-              disabled={exporting}
-            >
-              <FileSpreadsheet className="h-4 w-4 mr-2" />
-              {exporting ? 'Exporting...' : 'Export to Excel'}
-            </Button>
-            <Button 
-              onClick={exportToPDF}
-              variant="outline"
-              disabled={exporting}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              {exporting ? 'Exporting...' : 'Export to PDF'}
-            </Button>
+      <div className="glass-card-solid rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+            <Calendar className="h-4 w-4 text-slate-600" />
           </div>
-        </CardContent>
-      </Card>
+          <h3 className="font-semibold text-slate-800">Export Options</h3>
+        </div>
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="space-y-2">
+            <Label htmlFor="startDate" className="text-slate-600 text-sm">Start Date</Label>
+            <Input
+              id="startDate"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-40 glass-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="endDate" className="text-slate-600 text-sm">End Date</Label>
+            <Input
+              id="endDate"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-40 glass-input"
+            />
+          </div>
+          <Button 
+            onClick={exportToExcel} 
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg shadow-blue-500/30 rounded-xl"
+            disabled={exporting}
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            {exporting ? 'Exporting...' : 'Export to Excel'}
+          </Button>
+          <Button 
+            onClick={exportToPDF}
+            variant="outline"
+            disabled={exporting}
+            className="rounded-xl"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            {exporting ? 'Exporting...' : 'Export to PDF'}
+          </Button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-emerald-600" />
-              Agent Performance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={agentPerformance.slice(0, 10)}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="agent_name" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={80} />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="checkin_count" name="Checkins" fill="#10b981" />
-                <Bar dataKey="conversions" name="Conversions" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Users className="h-5 w-5 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Agent Performance</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={agentPerformance.slice(0, 10)}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="agent_name" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={80} />
+              <YAxis />
+              <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+              <Legend />
+              <Bar dataKey="checkin_count" name="Checkins" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="conversions" name="Conversions" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-blue-600" />
-              Hourly Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={hourlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hour" tickFormatter={(h) => `${h}:00`} />
-                <YAxis />
-                <Tooltip labelFormatter={(h) => `${h}:00`} />
-                <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6' }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Hourly Activity</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={hourlyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="hour" tickFormatter={(h) => `${h}:00`} />
+              <YAxis />
+              <Tooltip labelFormatter={(h) => `${h}:00`} contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+              <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6' }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
               <Calendar className="h-5 w-5 text-amber-600" />
-              Daily Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={dailyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day_name" tick={{ fontSize: 10 }} />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Daily Distribution</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={dailyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="day_name" tick={{ fontSize: 10 }} />
+              <YAxis />
+              <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+              <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
               <Target className="h-5 w-5 text-purple-600" />
-              Conversion Rate
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={conversionPieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {conversionPieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Conversion Rate</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={conversionPieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {conversionPieData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
               <MapPin className="h-5 w-5 text-red-600" />
-              Betting Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={bettingPieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {bettingPieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Betting Status</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={bettingPieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {bettingPieData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Agent Performance Table</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="glass-card-solid rounded-2xl overflow-hidden">
+        <div className="p-4 border-b border-slate-100">
+          <h3 className="font-semibold text-slate-800">Agent Performance Table</h3>
+        </div>
+        <div className="p-6">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -441,7 +429,7 @@ export default function Reports({ apiUrl }: ReportsProps) {
                   <tr key={agent.agent_id} className="border-b hover:bg-slate-50">
                     <td className="p-3">
                       <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                        index < 3 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                        index < 3 ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
                       }`}>
                         {index + 1}
                       </span>
@@ -452,7 +440,7 @@ export default function Reports({ apiUrl }: ReportsProps) {
                     <td className="p-3 text-right">{agent.conversions.toLocaleString()}</td>
                     <td className="p-3 text-right">
                       <span className={`font-medium ${
-                        agent.conversion_rate >= 30 ? 'text-emerald-600' : 
+                        agent.conversion_rate >= 30 ? 'text-blue-600' : 
                         agent.conversion_rate >= 20 ? 'text-amber-600' : 'text-slate-600'
                       }`}>
                         {agent.conversion_rate.toFixed(1)}%
@@ -463,40 +451,36 @@ export default function Reports({ apiUrl }: ReportsProps) {
               </tbody>
             </table>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Summary Statistics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 bg-emerald-50 rounded-lg">
-              <p className="text-sm text-emerald-600">Total Agents</p>
-              <p className="text-2xl font-bold text-emerald-800">{agentPerformance.length}</p>
-            </div>
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-600">Total Checkins</p>
-              <p className="text-2xl font-bold text-blue-800">
-                {agentPerformance.reduce((sum, a) => sum + a.checkin_count, 0).toLocaleString()}
-              </p>
-            </div>
-            <div className="p-4 bg-purple-50 rounded-lg">
-              <p className="text-sm text-purple-600">Total Conversions</p>
-              <p className="text-2xl font-bold text-purple-800">
-                {agentPerformance.reduce((sum, a) => sum + a.conversions, 0).toLocaleString()}
-              </p>
-            </div>
-            <div className="p-4 bg-amber-50 rounded-lg">
-              <p className="text-sm text-amber-600">Avg Conversion Rate</p>
-              <p className="text-2xl font-bold text-amber-800">
-                {(agentPerformance.reduce((sum, a) => sum + a.conversion_rate, 0) / agentPerformance.length || 0).toFixed(1)}%
-              </p>
-            </div>
+      <div className="glass-card-solid rounded-2xl p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">Summary Statistics</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="kpi-card kpi-card-blue">
+            <p className="text-sm text-slate-500 font-medium">Total Agents</p>
+            <p className="text-2xl font-bold text-slate-800">{agentPerformance.length}</p>
           </div>
-        </CardContent>
-      </Card>
+          <div className="kpi-card kpi-card-blue">
+            <p className="text-sm text-slate-500 font-medium">Total Checkins</p>
+            <p className="text-2xl font-bold text-slate-800">
+              {agentPerformance.reduce((sum, a) => sum + a.checkin_count, 0).toLocaleString()}
+            </p>
+          </div>
+          <div className="kpi-card kpi-card-purple">
+            <p className="text-sm text-slate-500 font-medium">Total Conversions</p>
+            <p className="text-2xl font-bold text-slate-800">
+              {agentPerformance.reduce((sum, a) => sum + a.conversions, 0).toLocaleString()}
+            </p>
+          </div>
+          <div className="kpi-card kpi-card-amber">
+            <p className="text-sm text-slate-500 font-medium">Avg Conversion Rate</p>
+            <p className="text-2xl font-bold text-slate-800">
+              {(agentPerformance.reduce((sum, a) => sum + a.conversion_rate, 0) / agentPerformance.length || 0).toFixed(1)}%
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,239 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
   :root {
-    --radius: 0.5rem
+    --radius: 0.75rem;
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+  
+  body {
+    @apply bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 min-h-screen;
   }
 }
+
+@layer components {
+  /* Glass Card Effect */
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  }
+  
+  .glass-card-solid {
+    @apply bg-white backdrop-blur-xl border border-slate-200/50 shadow-lg;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  }
+  
+  /* Glass Sidebar - Hope UI Blue/Indigo */
+  .glass-sidebar {
+    background: linear-gradient(180deg, #3A57E8 0%, #2A3F9D 50%, #1E2F7A 100%);
+    box-shadow: 4px 0 24px rgba(58, 87, 232, 0.2);
+  }
+  
+  /* Glass Input */
+  .glass-input {
+    @apply bg-white/50 backdrop-blur-sm border border-slate-200/50 rounded-xl;
+    @apply focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100;
+    @apply transition-all duration-200;
+  }
+  
+  /* Glass Button */
+  .glass-button {
+    @apply bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl;
+    @apply hover:bg-white hover:shadow-lg transition-all duration-200;
+  }
+  
+  /* KPI Card Styles */
+  .kpi-card {
+    @apply relative overflow-hidden rounded-2xl p-6;
+    @apply bg-white/80 backdrop-blur-xl border border-white/30;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  }
+  
+  .kpi-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-10;
+    background: linear-gradient(135deg, currentColor 0%, transparent 60%);
+  }
+  
+  .kpi-card-blue {
+    @apply text-blue-600;
+    background: linear-gradient(135deg, rgba(58, 87, 232, 0.1) 0%, rgba(255, 255, 255, 0.9) 100%);
+    border-left: 4px solid #3A57E8;
+  }
+  
+  .kpi-card-cyan {
+    @apply text-cyan-600;
+    background: linear-gradient(135deg, rgba(0, 200, 200, 0.1) 0%, rgba(255, 255, 255, 0.9) 100%);
+    border-left: 4px solid #00C8C8;
+  }
+  
+  .kpi-card-amber {
+    @apply text-amber-600;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(255, 255, 255, 0.9) 100%);
+    border-left: 4px solid #f59e0b;
+  }
+  
+  .kpi-card-purple {
+    @apply text-purple-600;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(255, 255, 255, 0.9) 100%);
+    border-left: 4px solid #8b5cf6;
+  }
+  
+  .kpi-card-indigo {
+    @apply text-indigo-600;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(255, 255, 255, 0.9) 100%);
+    border-left: 4px solid #6366f1;
+  }
+  
+  /* Circular Progress Indicator */
+  .circular-progress {
+    @apply relative w-16 h-16;
+  }
+  
+  .circular-progress svg {
+    @apply w-full h-full -rotate-90;
+  }
+  
+  .circular-progress circle {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+  
+  .circular-progress .bg {
+    @apply stroke-slate-200;
+  }
+  
+  .circular-progress .progress {
+    transition: stroke-dashoffset 0.5s ease;
+  }
+  
+  /* Chart Container */
+  .chart-container {
+    @apply bg-white/80 backdrop-blur-xl rounded-2xl border border-white/30 p-6;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  }
+  
+  /* Table Styles */
+  .glass-table {
+    @apply bg-white/80 backdrop-blur-xl rounded-2xl border border-white/30 overflow-hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  }
+  
+  .glass-table thead {
+    @apply bg-slate-50/80;
+  }
+  
+  .glass-table tbody tr {
+    @apply border-b border-slate-100/50 hover:bg-blue-50/30 transition-colors;
+  }
+  
+  /* Navigation Item */
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-3 mx-3 rounded-xl transition-all duration-200;
+    @apply text-slate-300 hover:text-white hover:bg-white/10;
+  }
+  
+  .nav-item.active {
+    @apply bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg;
+    box-shadow: 0 4px 15px rgba(58, 87, 232, 0.4);
+  }
+  
+  /* Search Bar */
+  .search-bar {
+    @apply flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2;
+    @apply border border-white/10 text-white placeholder-slate-400;
+    @apply focus-within:bg-white/20 focus-within:border-white/20 transition-all;
+  }
+  
+  /* Badge */
+  .glass-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    @apply bg-white/80 backdrop-blur-sm border border-white/30;
+  }
+  
+  /* Announcement Banner */
+  .announcement-banner {
+    @apply bg-gradient-to-r from-amber-400 to-orange-400 text-white;
+    @apply px-4 py-2 rounded-full text-sm font-medium shadow-lg;
+  }
+  
+  /* Activity Card */
+  .activity-card {
+    @apply bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/30;
+    @apply hover:bg-white/80 transition-all duration-200;
+  }
+  
+  /* Stats Box */
+  .stats-box {
+    @apply bg-slate-50/80 backdrop-blur-sm rounded-xl p-4;
+    @apply border border-slate-100/50;
+  }
+  
+  /* Insight Card */
+  .insight-card {
+    @apply p-4 rounded-xl border backdrop-blur-sm;
+    @apply transition-all duration-200 hover:shadow-md;
+  }
+  
+  .insight-card-blue {
+    @apply bg-blue-50/80 border-blue-200/50;
+  }
+  
+  .insight-card-cyan {
+    @apply bg-cyan-50/80 border-cyan-200/50;
+  }
+  
+  .insight-card-amber {
+    @apply bg-amber-50/80 border-amber-200/50;
+  }
+  
+  .insight-card-purple {
+    @apply bg-purple-50/80 border-purple-200/50;
+  }
+  
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-100/50 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300/80 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400/80;
+  }
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Stagger animation delays */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
 

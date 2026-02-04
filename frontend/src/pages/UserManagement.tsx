@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -118,70 +117,64 @@ export default function UserManagement({ apiUrl }: UserManagementProps) {
         </div>
         <Button 
           onClick={() => setShowAddDialog(true)}
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg shadow-blue-500/30 rounded-xl"
         >
           <UserPlus className="h-4 w-4 mr-2" />
           Add User
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Users className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Total Users</p>
-                <p className="text-xl font-bold">{users.length}</p>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="kpi-card kpi-card-purple">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Total Users</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">{users.length}</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Admins</p>
-                <p className="text-xl font-bold">
-                  {users.filter(u => u.role === 'admin').length}
-                </p>
-              </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <Users className="h-6 w-6 text-purple-600" />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <Users className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Viewers</p>
-                <p className="text-xl font-bold">
-                  {users.filter(u => u.role === 'viewer').length}
-                </p>
-              </div>
+          </div>
+        </div>
+        <div className="kpi-card kpi-card-blue">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Admins</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">
+                {users.filter(u => u.role === 'admin').length}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <Users className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        <div className="kpi-card kpi-card-blue">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Viewers</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">
+                {users.filter(u => u.role === 'viewer').length}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <Users className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Platform Users
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+      <div className="glass-card-solid rounded-2xl overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex items-center gap-2">
+          <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+            <Users className="h-4 w-4 text-slate-600" />
+          </div>
+          <h3 className="font-semibold text-slate-800">Platform Users</h3>
+        </div>
+        <div className="p-0">
           {loading ? (
             <div className="h-64 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           ) : (
             <Table>
@@ -227,11 +220,11 @@ export default function UserManagement({ apiUrl }: UserManagementProps) {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
+        <DialogContent className="bg-white/95 backdrop-blur-xl border-white/20 rounded-2xl">
           <DialogHeader>
             <DialogTitle>Add New User</DialogTitle>
           </DialogHeader>
@@ -290,7 +283,7 @@ export default function UserManagement({ apiUrl }: UserManagementProps) {
             </Button>
             <Button 
               onClick={handleAddUser} 
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-blue-600 hover:bg-blue-700"
               disabled={saving}
             >
               {saving ? 'Creating...' : 'Create User'}
