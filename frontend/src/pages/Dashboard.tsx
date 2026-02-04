@@ -17,7 +17,6 @@ interface DashboardProps {
 interface KPIs {
   total_checkins: number;
   approved_checkins: number;
-  pending_checkins: number;
   active_agents: number;
   total_shops: number;
   conversions: number;
@@ -127,7 +126,6 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
 
   const statusData = kpis ? [
     { name: 'Approved', value: kpis.approved_checkins },
-    { name: 'Pending', value: kpis.pending_checkins },
   ] : [];
 
   const conversionPieData = conversionStats ? [
@@ -468,9 +466,9 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
               </span>
             </div>
             <div className="stats-box flex items-center justify-between">
-              <span className="text-slate-600">Pending Review</span>
-              <span className="font-bold text-amber-600 text-lg">
-                {kpis?.pending_checkins?.toLocaleString() || 0}
+              <span className="text-slate-600">Total Checkins</span>
+              <span className="font-bold text-blue-600 text-lg">
+                {kpis?.total_checkins?.toLocaleString() || 0}
               </span>
             </div>
             <div className="stats-box flex items-center justify-between">

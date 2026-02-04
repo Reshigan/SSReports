@@ -19,7 +19,6 @@ interface InsightsProps {
 interface KPIs {
   total_checkins: number;
   approved_checkins: number;
-  pending_checkins: number;
   active_agents: number;
   total_shops: number;
   conversions: number;
@@ -143,7 +142,6 @@ export default function Insights({ apiUrl }: InsightsProps) {
 
   const statusData = kpis ? [
     { name: 'Approved', value: kpis.approved_checkins },
-    { name: 'Pending', value: kpis.pending_checkins },
   ] : [];
 
   const conversionPieData = conversionStats ? [
@@ -335,8 +333,8 @@ export default function Insights({ apiUrl }: InsightsProps) {
               <div className="pt-4 border-t border-slate-100 mt-4">
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className="stats-box">
-                    <p className="text-2xl font-bold text-slate-800">{kpis?.pending_checkins?.toLocaleString() || 0}</p>
-                    <p className="text-sm text-slate-500">Pending Review</p>
+                    <p className="text-2xl font-bold text-slate-800">{kpis?.total_checkins?.toLocaleString() || 0}</p>
+                    <p className="text-sm text-slate-500">Total Checkins</p>
                   </div>
                   <div className="stats-box">
                     <p className="text-2xl font-bold text-slate-800">{kpis && kpis.active_agents > 0 ? Math.round(kpis.total_shops / kpis.active_agents) : 0}</p>
@@ -590,7 +588,7 @@ export default function Insights({ apiUrl }: InsightsProps) {
               </li>
               <li className="flex items-start gap-2">
                 <ArrowUp className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
-                Address {kpis?.pending_checkins?.toLocaleString()} pending checkins for faster approval cycle
+                Expand coverage to additional regions beyond Gauteng for growth
               </li>
             </ul>
           </div>
