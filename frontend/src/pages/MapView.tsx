@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -103,127 +102,117 @@ export default function MapView({ apiUrl }: MapViewProps) {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-40"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-40"
-              />
-            </div>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showShops}
-                  onChange={(e) => setShowShops(e.target.checked)}
-                  className="rounded"
-                />
-                <span className="text-sm">Show Shops</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showCheckins}
-                  onChange={(e) => setShowCheckins(e.target.checked)}
-                  className="rounded"
-                />
-                <span className="text-sm">Show Checkins</span>
-              </label>
-            </div>
-            <Button onClick={handleFilter} className="bg-emerald-600 hover:bg-emerald-700">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Apply Filters
-            </Button>
+      <div className="glass-card-solid rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+            <Filter className="h-4 w-4 text-slate-600" />
           </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <MapPin className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Total Shops</p>
-                <p className="text-xl font-bold">{shops.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <MapPin className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Checkin Points</p>
-                <p className="text-xl font-bold">{checkins.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <MapPin className="h-5 w-5 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Pending</p>
-                <p className="text-xl font-bold">
-                  {checkins.filter(c => c.status === 'PENDING').length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <MapPin className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Approved</p>
-                <p className="text-xl font-bold">
-                  {checkins.filter(c => c.status === 'APPROVED').length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <h3 className="font-semibold text-slate-800">Filters</h3>
+        </div>
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="space-y-2">
+            <Label htmlFor="startDate" className="text-slate-600 text-sm">Start Date</Label>
+            <Input
+              id="startDate"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-40 glass-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="endDate" className="text-slate-600 text-sm">End Date</Label>
+            <Input
+              id="endDate"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-40 glass-input"
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showShops}
+                onChange={(e) => setShowShops(e.target.checked)}
+                className="rounded accent-blue-600"
+              />
+              <span className="text-sm text-slate-600">Show Shops</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showCheckins}
+                onChange={(e) => setShowCheckins(e.target.checked)}
+                className="rounded accent-blue-600"
+              />
+              <span className="text-sm text-slate-600">Show Checkins</span>
+            </label>
+          </div>
+          <Button onClick={handleFilter} className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg shadow-blue-500/30 rounded-xl">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Apply Filters
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div className="kpi-card kpi-card-blue">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Total Shops</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">{shops.length}</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <MapPin className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        <div className="kpi-card kpi-card-blue">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Checkin Points</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">{checkins.length}</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <MapPin className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        <div className="kpi-card kpi-card-amber">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Pending</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">
+                {checkins.filter(c => c.status === 'PENDING').length}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+              <MapPin className="h-6 w-6 text-amber-600" />
+            </div>
+          </div>
+        </div>
+        <div className="kpi-card kpi-card-blue">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Approved</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">
+                {checkins.filter(c => c.status === 'APPROVED').length}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <MapPin className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="glass-card-solid rounded-2xl overflow-hidden">
+        <div className="p-0">
           {loading ? (
             <div className="h-96 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           ) : (
             <div className="h-[600px] rounded-lg overflow-hidden">
@@ -271,7 +260,7 @@ export default function MapView({ apiUrl }: MapViewProps) {
                         <h3 className="font-bold">Checkin #{checkin.id}</h3>
                         <p className="text-sm">Agent: {checkin.agent_id}</p>
                         <p className="text-sm">Status: <span className={`font-medium ${
-                          checkin.status === 'APPROVED' ? 'text-emerald-600' : 
+                          checkin.status === 'APPROVED' ? 'text-blue-600' : 
                           checkin.status === 'PENDING' ? 'text-amber-600' : 'text-red-600'
                         }`}>{checkin.status}</span></p>
                         <p className="text-xs text-gray-400 mt-1">
@@ -284,36 +273,32 @@ export default function MapView({ apiUrl }: MapViewProps) {
               </MapContainer>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Map Legend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                <MapPin className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-sm">Shop Location</span>
+      <div className="glass-card-solid rounded-2xl p-6">
+        <h3 className="font-semibold text-slate-800 mb-4">Map Legend</h3>
+        <div className="flex flex-wrap gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+              <MapPin className="h-4 w-4 text-white" />
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-emerald-500"></div>
-              <span className="text-sm">Approved Checkin</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-amber-500"></div>
-              <span className="text-sm">Pending Checkin</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-red-500"></div>
-              <span className="text-sm">Flagged Checkin</span>
-            </div>
+            <span className="text-sm text-slate-600">Shop Location</span>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+            <span className="text-sm text-slate-600">Approved Checkin</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-amber-500"></div>
+            <span className="text-sm text-slate-600">Pending Checkin</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-red-500"></div>
+            <span className="text-sm text-slate-600">Flagged Checkin</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   AreaChart, Area
 } from 'recharts';
 import { 
-  TrendingUp, Users, MapPin, CheckCircle, Clock, Target,
+  TrendingUp, Users, MapPin, Clock, Target,
   Calendar, Activity
 } from 'lucide-react';
 import DateRangeFilter from '@/components/DateRangeFilter';
@@ -51,7 +50,7 @@ interface ConversionStats {
   betting_no: number;
 }
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+const COLORS = ['#3A57E8', '#00C8C8', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 export default function Dashboard({ apiUrl }: DashboardProps) {
   const [kpis, setKpis] = useState<KPIs | null>(null);
@@ -113,7 +112,7 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -141,331 +140,349 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
     { name: 'New to Betting', value: conversionStats.betting_no },
   ] : [];
 
+  // Circular progress component
+  const CircularProgress = ({ value, color, size = 64 }: { value: number; color: string; size?: number }) => {
+    const radius = (size - 8) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (value / 100) * circumference;
+    
+    return (
+      <div className="circular-progress" style={{ width: size, height: size }}>
+        <svg viewBox={`0 0 ${size} ${size}`}>
+          <circle className="bg" cx={size/2} cy={size/2} r={radius} />
+          <circle 
+            className="progress" 
+            cx={size/2} 
+            cy={size/2} 
+            r={radius}
+            stroke={color}
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+          />
+        </svg>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Dashboard</h1>
           <p className="text-slate-500 mt-1">SalesSync Performance Overview</p>
         </div>
-        <div className="text-sm text-slate-500">
-          Last updated: {new Date().toLocaleString()}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-slate-500">
+            Last updated: {new Date().toLocaleString()}
+          </span>
         </div>
       </div>
 
-      <DateRangeFilter
-        startDate={startDate}
-        endDate={endDate}
-        onStartDateChange={setStartDate}
-        onEndDateChange={setEndDate}
-        onApply={handleDateFilter}
-        onClear={handleClearFilter}
-      />
+      <div className="glass-card-solid rounded-2xl p-4">
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          onApply={handleDateFilter}
+          onClear={handleClearFilter}
+        />
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-100 text-sm">Total Checkins</p>
-                <p className="text-3xl font-bold mt-1">{kpis?.total_checkins?.toLocaleString() || 0}</p>
-              </div>
-              <CheckCircle className="h-12 w-12 text-emerald-200" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="kpi-card kpi-card-blue animate-fade-in-up stagger-1">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Total Checkins</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">{kpis?.total_checkins?.toLocaleString() || 0}</p>
+              <p className="text-blue-600 text-sm mt-2 font-medium">{approvalRate}% approval rate</p>
             </div>
-            <div className="mt-4 text-sm text-emerald-100">
-              {approvalRate}% approval rate
-            </div>
-          </CardContent>
-        </Card>
+            <CircularProgress value={parseFloat(approvalRate)} color="#3A57E8" />
+          </div>
+        </div>
 
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm">Active Agents</p>
-                <p className="text-3xl font-bold mt-1">{kpis?.active_agents || 0}</p>
-              </div>
-              <Users className="h-12 w-12 text-blue-200" />
+        <div className="kpi-card kpi-card-blue animate-fade-in-up stagger-2">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Active Agents</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">{kpis?.active_agents || 0}</p>
+              <p className="text-blue-600 text-sm mt-2 font-medium">Across all regions</p>
             </div>
-            <div className="mt-4 text-sm text-blue-100">
-              Across all regions
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <Users className="h-8 w-8 text-blue-600" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-amber-100 text-sm">Total Shops</p>
-                <p className="text-3xl font-bold mt-1">{kpis?.total_shops?.toLocaleString() || 0}</p>
-              </div>
-              <MapPin className="h-12 w-12 text-amber-200" />
+        <div className="kpi-card kpi-card-amber animate-fade-in-up stagger-3">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Total Shops</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">{kpis?.total_shops?.toLocaleString() || 0}</p>
+              <p className="text-amber-600 text-sm mt-2 font-medium">Registered locations</p>
             </div>
-            <div className="mt-4 text-sm text-amber-100">
-              Registered locations
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
+              <MapPin className="h-8 w-8 text-amber-600" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm">Conversion Rate</p>
-                <p className="text-3xl font-bold mt-1">{conversionRate}%</p>
-              </div>
-              <Target className="h-12 w-12 text-purple-200" />
+        <div className="kpi-card kpi-card-purple animate-fade-in-up stagger-4">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Conversion Rate</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">{conversionRate}%</p>
+              <p className="text-purple-600 text-sm mt-2 font-medium">{kpis?.conversions?.toLocaleString() || 0} conversions</p>
             </div>
-            <div className="mt-4 text-sm text-purple-100">
-              {kpis?.conversions?.toLocaleString() || 0} conversions
-            </div>
-          </CardContent>
-        </Card>
+            <CircularProgress value={parseFloat(conversionRate)} color="#8b5cf6" />
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-emerald-600" />
-              Checkins by Hour
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={hourlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hour" tickFormatter={(h) => `${h}:00`} />
-                <YAxis />
-                <Tooltip 
-                  labelFormatter={(h) => `${h}:00`}
-                  formatter={(value: number) => [value.toLocaleString(), 'Checkins']}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="#10b981" 
-                  fill="#10b98133"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Clock className="h-5 w-5 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Checkins by Hour</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={hourlyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="hour" tickFormatter={(h) => `${h}:00`} stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" />
+              <Tooltip 
+                labelFormatter={(h) => `${h}:00`}
+                formatter={(value: number) => [value.toLocaleString(), 'Checkins']}
+                contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="count" 
+                stroke="#3A57E8" 
+                fill="url(#blueGradient)"
+                strokeWidth={2}
+              />
+              <defs>
+                <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3A57E8" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#3A57E8" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
               <Calendar className="h-5 w-5 text-blue-600" />
-              Checkins by Day of Week
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={dailyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day_name" />
-                <YAxis />
-                <Tooltip formatter={(value: number) => [value.toLocaleString(), 'Checkins']} />
-                <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Checkins by Day of Week</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={dailyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="day_name" stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" />
+              <Tooltip 
+                formatter={(value: number) => [value.toLocaleString(), 'Checkins']}
+                contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+              />
+              <Bar dataKey="count" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-emerald-600" />
-              Checkin Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="40%"
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {statusData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => value.toLocaleString()} />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Activity className="h-5 w-5 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Checkin Status</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={statusData}
+                cx="50%"
+                cy="40%"
+                innerRadius={50}
+                outerRadius={70}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {statusData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value: number) => value.toLocaleString()}
+                contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+              />
+              <Legend verticalAlign="bottom" height={36} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
               <Target className="h-5 w-5 text-purple-600" />
-              Conversion Analysis
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={conversionPieData}
-                  cx="50%"
-                  cy="40%"
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {conversionPieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => value.toLocaleString()} />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Conversion Analysis</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={conversionPieData}
+                cx="50%"
+                cy="40%"
+                innerRadius={50}
+                outerRadius={70}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {conversionPieData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value: number) => value.toLocaleString()}
+                contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+              />
+              <Legend verticalAlign="bottom" height={36} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-amber-600" />
-              Betting Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={bettingPieData}
-                  cx="50%"
-                  cy="40%"
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {bettingPieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => value.toLocaleString()} />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Betting Status</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={bettingPieData}
+                cx="50%"
+                cy="40%"
+                innerRadius={50}
+                outerRadius={70}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {bettingPieData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value: number) => value.toLocaleString()}
+                contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+              />
+              <Legend verticalAlign="bottom" height={36} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <div className="chart-container">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
             <Users className="h-5 w-5 text-blue-600" />
-            Top Agent Performance
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={agentPerformance.slice(0, 10)} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis dataKey="agent_name" type="category" width={100} tick={{ fontSize: 12 }} />
-              <Tooltip 
-                formatter={(value: number, name: string) => [
-                  value.toLocaleString(), 
-                  name === 'checkin_count' ? 'Checkins' : name === 'conversions' ? 'Conversions' : name
-                ]}
-              />
-              <Legend />
-              <Bar dataKey="checkin_count" name="Checkins" fill="#10b981" radius={[0, 4, 4, 0]} />
-              <Bar dataKey="conversions" name="Conversions" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+          </div>
+          <h3 className="text-lg font-semibold text-slate-800">Top Agent Performance</h3>
+        </div>
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={agentPerformance.slice(0, 10)} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis type="number" stroke="#94a3b8" />
+            <YAxis dataKey="agent_name" type="category" width={100} tick={{ fontSize: 12 }} stroke="#94a3b8" />
+            <Tooltip 
+              formatter={(value: number, name: string) => [
+                value.toLocaleString(), 
+                name === 'checkin_count' ? 'Checkins' : name === 'conversions' ? 'Conversions' : name
+              ]}
+              contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+            />
+            <Legend />
+            <Bar dataKey="checkin_count" name="Checkins" fill="#10b981" radius={[0, 8, 8, 0]} />
+            <Bar dataKey="conversions" name="Conversions" fill="#3b82f6" radius={[0, 8, 8, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Key Insights</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-              <h4 className="font-semibold text-emerald-800">Peak Activity Hours</h4>
-              <p className="text-sm text-emerald-600 mt-1">
+        <div className="glass-card-solid rounded-2xl p-6">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Key Insights</h3>
+          <div className="space-y-3">
+            <div className="insight-card insight-card-blue">
+              <h4 className="font-semibold text-blue-800">Peak Activity Hours</h4>
+              <p className="text-sm text-blue-600 mt-1">
                 Highest activity between 9:00 AM - 3:00 PM with peak at 9:00 AM
               </p>
             </div>
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="insight-card insight-card-blue">
               <h4 className="font-semibold text-blue-800">Best Performing Days</h4>
               <p className="text-sm text-blue-600 mt-1">
                 Friday shows highest activity, followed by Thursday and Wednesday
               </p>
             </div>
-            <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="insight-card insight-card-amber">
               <h4 className="font-semibold text-amber-800">Conversion Opportunity</h4>
               <p className="text-sm text-amber-600 mt-1">
                 ~71% of contacts are new to betting - high conversion potential
               </p>
             </div>
-            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <div className="insight-card insight-card-purple">
               <h4 className="font-semibold text-purple-800">Geographic Coverage</h4>
               <p className="text-sm text-purple-600 mt-1">
                 Operations concentrated in Gauteng region (lat -25 to -26)
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <span className="text-slate-600">Average Checkins per Agent</span>
-                <span className="font-bold text-slate-800">
-                  {kpis && kpis.active_agents > 0 
-                    ? Math.round(kpis.total_checkins / kpis.active_agents).toLocaleString()
-                    : 0}
-                </span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <span className="text-slate-600">Shops per Agent</span>
-                <span className="font-bold text-slate-800">
-                  {kpis && kpis.active_agents > 0 
-                    ? Math.round(kpis.total_shops / kpis.active_agents)
-                    : 0}
-                </span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <span className="text-slate-600">Pending Review</span>
-                <span className="font-bold text-amber-600">
-                  {kpis?.pending_checkins?.toLocaleString() || 0}
-                </span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <span className="text-slate-600">Approval Rate</span>
-                <span className="font-bold text-emerald-600">{approvalRate}%</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <span className="text-slate-600">Conversion Rate</span>
-                <span className="font-bold text-purple-600">{conversionRate}%</span>
-              </div>
+        <div className="glass-card-solid rounded-2xl p-6">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Performance Summary</h3>
+          <div className="space-y-3">
+            <div className="stats-box flex items-center justify-between">
+              <span className="text-slate-600">Average Checkins per Agent</span>
+              <span className="font-bold text-slate-800 text-lg">
+                {kpis && kpis.active_agents > 0 
+                  ? Math.round(kpis.total_checkins / kpis.active_agents).toLocaleString()
+                  : 0}
+              </span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="stats-box flex items-center justify-between">
+              <span className="text-slate-600">Shops per Agent</span>
+              <span className="font-bold text-slate-800 text-lg">
+                {kpis && kpis.active_agents > 0 
+                  ? Math.round(kpis.total_shops / kpis.active_agents)
+                  : 0}
+              </span>
+            </div>
+            <div className="stats-box flex items-center justify-between">
+              <span className="text-slate-600">Pending Review</span>
+              <span className="font-bold text-amber-600 text-lg">
+                {kpis?.pending_checkins?.toLocaleString() || 0}
+              </span>
+            </div>
+            <div className="stats-box flex items-center justify-between">
+              <span className="text-slate-600">Approval Rate</span>
+              <span className="font-bold text-blue-600 text-lg">{approvalRate}%</span>
+            </div>
+            <div className="stats-box flex items-center justify-between">
+              <span className="text-slate-600">Conversion Rate</span>
+              <span className="font-bold text-purple-600 text-lg">{conversionRate}%</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -137,7 +136,7 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return <Badge className="bg-emerald-100 text-emerald-800">Approved</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800">Approved</Badge>;
       case 'PENDING':
         return <Badge className="bg-amber-100 text-amber-800">Pending</Badge>;
       case 'FLAGGED':
@@ -164,82 +163,80 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
           <h1 className="text-3xl font-bold text-slate-800">Checkins</h1>
           <p className="text-slate-500 mt-1">View and filter all checkin records</p>
         </div>
-        <div className="text-sm text-slate-500">
-          Total: {total.toLocaleString()} records
+        <div className="text-sm text-slate-500 glass-card-solid px-4 py-2 rounded-xl">
+          Total: <span className="font-semibold text-slate-800">{total.toLocaleString()}</span> records
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-40"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-40"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <select
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-40 h-10 px-3 rounded-md border border-input bg-background"
-              >
-                <option value="">All</option>
-                <option value="APPROVED">Approved</option>
-                <option value="PENDING">Pending</option>
-                <option value="FLAGGED">Flagged</option>
-              </select>
-            </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="agentId">Agent</Label>
-                          <select
-                            id="agentId"
-                            value={agentId}
-                            onChange={(e) => setAgentId(e.target.value)}
-                            className="w-48 h-10 px-3 rounded-md border border-input bg-background"
-                          >
-                            <option value="">All Agents</option>
-                            {agents.map((agent) => (
-                              <option key={agent.agent_id} value={agent.agent_id}>
-                                {agent.agent_name || `Agent ${agent.agent_id}`}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-            <Button onClick={handleFilter} className="bg-emerald-600 hover:bg-emerald-700">
-              Apply Filters
-            </Button>
+      <div className="glass-card-solid rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+            <Filter className="h-4 w-4 text-slate-600" />
           </div>
-        </CardContent>
-      </Card>
+          <h3 className="font-semibold text-slate-800">Filters</h3>
+        </div>
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="space-y-2">
+            <Label htmlFor="startDate" className="text-slate-600 text-sm">Start Date</Label>
+            <Input
+              id="startDate"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-40 glass-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="endDate" className="text-slate-600 text-sm">End Date</Label>
+            <Input
+              id="endDate"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-40 glass-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="status" className="text-slate-600 text-sm">Status</Label>
+            <select
+              id="status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-40 h-10 px-3 rounded-xl border border-slate-200 bg-white/50 backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+            >
+              <option value="">All</option>
+              <option value="APPROVED">Approved</option>
+              <option value="PENDING">Pending</option>
+              <option value="FLAGGED">Flagged</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="agentId" className="text-slate-600 text-sm">Agent</Label>
+            <select
+              id="agentId"
+              value={agentId}
+              onChange={(e) => setAgentId(e.target.value)}
+              className="w-48 h-10 px-3 rounded-xl border border-slate-200 bg-white/50 backdrop-blur-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+            >
+              <option value="">All Agents</option>
+              {agents.map((agent) => (
+                <option key={agent.agent_id} value={agent.agent_id}>
+                  {agent.agent_name || `Agent ${agent.agent_id}`}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Button onClick={handleFilter} className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg shadow-blue-500/30 rounded-xl">
+            Apply Filters
+          </Button>
+        </div>
+      </div>
 
-      <Card>
-        <CardContent className="p-0">
+      <div className="glass-card-solid rounded-2xl overflow-hidden">
+        <div className="p-0">
           {loading ? (
             <div className="h-64 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           ) : (
             <>
@@ -298,7 +295,7 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
                 </TableBody>
               </Table>
 
-              <div className="flex items-center justify-between p-4 border-t">
+              <div className="flex items-center justify-between p-4 border-t border-slate-100">
                 <div className="text-sm text-slate-500">
                   Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total}
                 </div>
@@ -308,6 +305,7 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
                     size="sm"
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
+                    className="rounded-lg"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Previous
@@ -320,6 +318,7 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
                     size="sm"
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
+                    className="rounded-lg"
                   >
                     Next
                     <ChevronRight className="h-4 w-4" />
@@ -328,17 +327,17 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
               </div>
             </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Dialog open={!!selectedCheckin} onOpenChange={() => setSelectedCheckin(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white/95 backdrop-blur-xl border-white/20">
           <DialogHeader>
             <DialogTitle>Checkin Details #{selectedCheckin?.id}</DialogTitle>
           </DialogHeader>
           {detailsLoading ? (
             <div className="h-32 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : checkinDetails ? (
             <div className="space-y-6">
@@ -380,7 +379,7 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-slate-500">Converted</p>
-                      <Badge className={checkinDetails.response.converted ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800'}>
+                      <Badge className={checkinDetails.response.converted ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}>
                         {checkinDetails.response.converted ? 'Yes' : 'No'}
                       </Badge>
                     </div>

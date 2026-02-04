@@ -57,7 +57,7 @@ export default function DateRangeFilter({
       <Button 
         onClick={onApply} 
         size="sm"
-        className="bg-emerald-600 hover:bg-emerald-700"
+        className="bg-blue-600 hover:bg-blue-700"
       >
         Apply
       </Button>

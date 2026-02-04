@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -162,7 +162,7 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
   if (loading && shops.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -176,142 +176,143 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
         </div>
       </div>
 
-      <DateRangeFilter
-        startDate={startDate}
-        endDate={endDate}
-        onStartDateChange={setStartDate}
-        onEndDateChange={setEndDate}
-        onApply={handleDateFilter}
-        onClear={handleClearFilter}
-      />
+      <div className="glass-card-solid rounded-2xl p-4">
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          onApply={handleDateFilter}
+          onClear={handleClearFilter}
+        />
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-100 text-sm">Total Shops</p>
-                <p className="text-3xl font-bold mt-1">{total.toLocaleString()}</p>
-              </div>
-              <Store className="h-10 w-10 text-emerald-200" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div className="kpi-card kpi-card-blue">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Total Shops</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">{total.toLocaleString()}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <Store className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm">Total Visits</p>
-                <p className="text-3xl font-bold mt-1">
-                  {shops.reduce((sum, s) => sum + (s.total_checkins || 0), 0).toLocaleString()}
-                </p>
-              </div>
-              <Users className="h-10 w-10 text-blue-200" />
+        <div className="kpi-card kpi-card-blue">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Total Visits</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">
+                {shops.reduce((sum, s) => sum + (s.total_checkins || 0), 0).toLocaleString()}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <Users className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm">Total Conversions</p>
-                <p className="text-3xl font-bold mt-1">
-                  {shops.reduce((sum, s) => sum + (s.conversions || 0), 0).toLocaleString()}
-                </p>
-              </div>
-              <TrendingUp className="h-10 w-10 text-purple-200" />
+        <div className="kpi-card kpi-card-purple">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Total Conversions</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">
+                {shops.reduce((sum, s) => sum + (s.conversions || 0), 0).toLocaleString()}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-amber-100 text-sm">Avg Visits/Shop</p>
-                <p className="text-3xl font-bold mt-1">
-                  {shops.length > 0 
-                    ? Math.round(shops.reduce((sum, s) => sum + (s.total_checkins || 0), 0) / shops.length)
-                    : 0}
-                </p>
-              </div>
-              <CheckCircle className="h-10 w-10 text-amber-200" />
+        <div className="kpi-card kpi-card-amber">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Avg Visits/Shop</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">
+                {shops.length > 0 
+                  ? Math.round(shops.reduce((sum, s) => sum + (s.total_checkins || 0), 0) / shops.length)
+                  : 0}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="h-6 w-6 text-amber-600" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Store className="h-5 w-5 text-emerald-600" />
-              Top Performing Shops
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={topShopsData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="checkins" name="Visits" fill="#10b981" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="conversions" name="Conversions" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Store className="h-5 w-5 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Top Performing Shops</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={topShopsData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis type="number" stroke="#94a3b8" />
+              <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} stroke="#94a3b8" />
+              <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+              <Bar dataKey="checkins" name="Visits" fill="#10b981" radius={[0, 8, 8, 0]} />
+              <Bar dataKey="conversions" name="Conversions" fill="#3b82f6" radius={[0, 8, 8, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-purple-600" />
-              Conversion Rate by Shop
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="40%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {pieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => value.toLocaleString()} />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Conversion Rate by Shop</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="40%"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {pieData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value: number) => value.toLocaleString()}
+                contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+              />
+              <Legend verticalAlign="bottom" height={36} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Store className="h-5 w-5 text-slate-600" />
-              All Shops
-            </CardTitle>
-            <Input
-              placeholder="Search shops..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64"
-            />
+      <div className="glass-card-solid rounded-2xl overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+              <Store className="h-4 w-4 text-slate-600" />
+            </div>
+            <h3 className="font-semibold text-slate-800">All Shops</h3>
           </div>
-        </CardHeader>
-        <CardContent>
+          <Input
+            placeholder="Search shops..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-64 glass-input"
+          />
+        </div>
+        <div className="p-6">
           <Table>
             <TableHeader>
               <TableRow>
@@ -336,12 +337,12 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
                     <Badge variant="outline">{shop.total_checkins || 0}</Badge>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge className="bg-emerald-100 text-emerald-700">{shop.conversions || 0}</Badge>
+                    <Badge className="bg-blue-100 text-blue-700">{shop.conversions || 0}</Badge>
                   </TableCell>
                   <TableCell className="text-center">
                     <span className={`font-semibold ${
                       shop.total_checkins > 0 && (shop.conversions / shop.total_checkins) > 0.5 
-                        ? 'text-emerald-600' 
+                        ? 'text-blue-600' 
                         : 'text-amber-600'
                     }`}>
                       {shop.total_checkins > 0 
@@ -410,8 +411,8 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Dialog open={showDetail} onOpenChange={setShowDetail}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -427,7 +428,7 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
               <div className="grid grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-emerald-600">
+                    <p className="text-2xl font-bold text-blue-600">
                       {selectedShop.stats?.total_checkins || 0}
                     </p>
                     <p className="text-sm text-slate-500">Total Visits</p>
@@ -499,7 +500,7 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
                                 {checkin.status}
                               </Badge>
                               {checkin.converted === 1 && (
-                                <Badge className="bg-emerald-100 text-emerald-700">Converted</Badge>
+                                <Badge className="bg-blue-100 text-blue-700">Converted</Badge>
                               )}
                             </div>
                           </div>

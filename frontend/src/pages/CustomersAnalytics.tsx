@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -182,7 +182,7 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
   if (loading && customers.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -196,145 +196,149 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
         </div>
       </div>
 
-      <DateRangeFilter
-        startDate={startDate}
-        endDate={endDate}
-        onStartDateChange={setStartDate}
-        onEndDateChange={setEndDate}
-        onApply={handleDateFilter}
-        onClear={handleClearFilter}
-      />
+      <div className="glass-card-solid rounded-2xl p-4">
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          onApply={handleDateFilter}
+          onClear={handleClearFilter}
+        />
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm">Total Customers</p>
-                <p className="text-3xl font-bold mt-1">{stats?.total_customers?.toLocaleString() || 0}</p>
-              </div>
-              <Users className="h-10 w-10 text-blue-200" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div className="kpi-card kpi-card-blue">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Total Customers</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">{stats?.total_customers?.toLocaleString() || 0}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <Users className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-100 text-sm">Converted</p>
-                <p className="text-3xl font-bold mt-1">{stats?.converted?.toLocaleString() || 0}</p>
-              </div>
-              <UserCheck className="h-10 w-10 text-emerald-200" />
+        <div className="kpi-card kpi-card-blue">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Converted</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">{stats?.converted?.toLocaleString() || 0}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <UserCheck className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm">Conversion Rate</p>
-                <p className="text-3xl font-bold mt-1">{conversionRate}%</p>
-              </div>
-              <TrendingUp className="h-10 w-10 text-purple-200" />
+        <div className="kpi-card kpi-card-purple">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">Conversion Rate</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">{conversionRate}%</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-amber-100 text-sm">New to Betting</p>
-                <p className="text-3xl font-bold mt-1">
-                  {((stats?.total_customers || 0) - (stats?.already_betting || 0)).toLocaleString()}
-                </p>
-              </div>
-              <CheckCircle className="h-10 w-10 text-amber-200" />
+        <div className="kpi-card kpi-card-amber">
+          <div className="flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-slate-500 text-sm font-medium">New to Betting</p>
+              <p className="text-3xl font-bold text-slate-800 mt-1">
+                {((stats?.total_customers || 0) - (stats?.already_betting || 0)).toLocaleString()}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="h-6 w-6 text-amber-600" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
-              Conversion Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={conversionData}
-                  cx="50%"
-                  cy="40%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {conversionData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => value.toLocaleString()} />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Conversion Status</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie
+                data={conversionData}
+                cx="50%"
+                cy="40%"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {conversionData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value: number) => value.toLocaleString()}
+                contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+              />
+              <Legend verticalAlign="bottom" height={36} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="chart-container">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
               <Users className="h-5 w-5 text-blue-600" />
-              Betting Experience
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={bettingData}
-                  cx="50%"
-                  cy="40%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {bettingData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => value.toLocaleString()} />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800">Betting Experience</h3>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie
+                data={bettingData}
+                cx="50%"
+                cy="40%"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {bettingData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value: number) => value.toLocaleString()}
+                contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+              />
+              <Legend verticalAlign="bottom" height={36} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-slate-600" />
-              Customer Records
-            </CardTitle>
-            <Input
-              placeholder="Search by customer, shop or agent..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64"
-            />
+      <div className="glass-card-solid rounded-2xl overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+              <Users className="h-4 w-4 text-slate-600" />
+            </div>
+            <h3 className="font-semibold text-slate-800">Customer Records</h3>
           </div>
-        </CardHeader>
-        <CardContent>
+          <Input
+            placeholder="Search by customer, shop or agent..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-64 glass-input"
+          />
+        </div>
+        <div className="p-6">
           <Table>
                         <TableHeader>
                           <TableRow>
@@ -377,7 +381,7 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
                   </TableCell>
                   <TableCell className="text-center">
                     {customer.converted === 1 ? (
-                      <Badge className="bg-emerald-100 text-emerald-700">
+                      <Badge className="bg-blue-100 text-blue-700">
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Yes
                       </Badge>
@@ -447,11 +451,11 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Dialog open={showDetail} onOpenChange={setShowDetail}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-white/95 backdrop-blur-xl border-white/20">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -480,7 +484,7 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
               <div className="grid grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className={`text-2xl font-bold ${selectedCustomer.converted === 1 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    <div className={`text-2xl font-bold ${selectedCustomer.converted === 1 ? 'text-blue-600' : 'text-slate-400'}`}>
                       {selectedCustomer.converted === 1 ? 'Yes' : 'No'}
                     </div>
                     <p className="text-sm text-slate-500">Converted</p>
