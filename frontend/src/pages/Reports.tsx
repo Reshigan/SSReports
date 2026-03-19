@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import { 
   FileSpreadsheet, FileText, Calendar, TrendingUp,
-  Users, MapPin, Target, Filter
+  Users, MapPin, Target
 } from 'lucide-react';
 import DateRangeFilter from '@/components/DateRangeFilter';
 import * as XLSX from 'xlsx';
