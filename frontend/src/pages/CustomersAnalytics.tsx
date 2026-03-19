@@ -102,12 +102,14 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
     fetchCustomers();
   }, [page]);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = async (overrideStartDate?: string, overrideEndDate?: string) => {
     setLoading(true);
     try {
+      const start = overrideStartDate !== undefined ? overrideStartDate : startDate;
+      const end = overrideEndDate !== undefined ? overrideEndDate : endDate;
       let url = `${apiUrl}/api/customers-analytics?page=${page}&limit=${limit}`;
-      if (startDate) url += `&startDate=${startDate}`;
-      if (endDate) url += `&endDate=${endDate}`;
+      if (start) url += `&startDate=${start}`;
+      if (end) url += `&endDate=${end}`;
       const res = await fetch(url);
       const data = await res.json();
       setCustomers(data.customers || []);
@@ -126,8 +128,10 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
   };
 
   const handleClearFilter = () => {
+    setStartDate('');
+    setEndDate('');
     setPage(1);
-    fetchCustomers();
+    fetchCustomers('', '');
   };
 
   const openPhotoModal = (checkinId: number, title: string) => {

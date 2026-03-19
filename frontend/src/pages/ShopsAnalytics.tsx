@@ -89,12 +89,14 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
     fetchShops();
   }, [page]);
 
-  const fetchShops = async () => {
+  const fetchShops = async (overrideStartDate?: string, overrideEndDate?: string) => {
     setLoading(true);
     try {
+      const start = overrideStartDate !== undefined ? overrideStartDate : startDate;
+      const end = overrideEndDate !== undefined ? overrideEndDate : endDate;
       let url = `${apiUrl}/api/shops-analytics?page=${page}&limit=${limit}`;
-      if (startDate) url += `&startDate=${startDate}`;
-      if (endDate) url += `&endDate=${endDate}`;
+      if (start) url += `&startDate=${start}`;
+      if (end) url += `&endDate=${end}`;
       const res = await fetch(url);
       const data = await res.json();
       setShops(data.shops || []);
@@ -112,8 +114,10 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
   };
 
   const handleClearFilter = () => {
+    setStartDate('');
+    setEndDate('');
     setPage(1);
-    fetchShops();
+    fetchShops('', '');
   };
 
   const openPhotoModal = (checkinId: number, title: string) => {
