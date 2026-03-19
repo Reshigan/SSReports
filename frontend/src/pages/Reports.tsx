@@ -8,8 +8,9 @@ import {
 } from 'recharts';
 import { 
   FileSpreadsheet, FileText, Calendar, TrendingUp,
-  Users, MapPin, Target
+  Users, MapPin, Target, Filter
 } from 'lucide-react';
+import DateRangeFilter from '@/components/DateRangeFilter';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -61,14 +62,21 @@ export default function Reports({ apiUrl }: ReportsProps) {
     fetchReportData();
   }, []);
 
-  const fetchReportData = async () => {
+  const fetchReportData = async (overrideStartDate?: string, overrideEndDate?: string) => {
     setLoading(true);
     try {
+      const start = overrideStartDate !== undefined ? overrideStartDate : startDate;
+      const end = overrideEndDate !== undefined ? overrideEndDate : endDate;
+      const dateParams = new URLSearchParams();
+      if (start) dateParams.append('startDate', start);
+      if (end) dateParams.append('endDate', end);
+      const queryString = dateParams.toString() ? `?${dateParams.toString()}` : '';
+
       const [agentsRes, hourlyRes, dailyRes, conversionRes] = await Promise.all([
-        fetch(`${apiUrl}/api/dashboard/agent-performance`),
-        fetch(`${apiUrl}/api/dashboard/checkins-by-hour`),
-        fetch(`${apiUrl}/api/dashboard/checkins-by-day`),
-        fetch(`${apiUrl}/api/dashboard/conversion-stats`),
+        fetch(`${apiUrl}/api/dashboard/agent-performance${queryString}`),
+        fetch(`${apiUrl}/api/dashboard/checkins-by-hour${queryString}`),
+        fetch(`${apiUrl}/api/dashboard/checkins-by-day${queryString}`),
+        fetch(`${apiUrl}/api/dashboard/conversion-stats${queryString}`),
       ]);
 
       const [agentsData, hourlyDataRes, dailyDataRes, conversionData] = await Promise.all([
@@ -87,6 +95,16 @@ export default function Reports({ apiUrl }: ReportsProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDateFilter = () => {
+    fetchReportData();
+  };
+
+  const handleClearFilter = () => {
+    setStartDate('');
+    setEndDate('');
+    fetchReportData('', '');
   };
 
   const exportToExcel = async () => {
@@ -243,6 +261,17 @@ export default function Reports({ apiUrl }: ReportsProps) {
         </div>
       </div>
 
+      <div className="glass-card-solid rounded-2xl p-4">
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          onApply={handleDateFilter}
+          onClear={handleClearFilter}
+        />
+      </div>
+
       <div className="glass-card-solid rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
@@ -251,26 +280,6 @@ export default function Reports({ apiUrl }: ReportsProps) {
           <h3 className="font-semibold text-slate-800">Export Options</h3>
         </div>
         <div className="flex flex-wrap gap-4 items-end">
-          <div className="space-y-2">
-            <Label htmlFor="startDate" className="text-slate-600 text-sm">Start Date</Label>
-            <Input
-              id="startDate"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-40 glass-input"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="endDate" className="text-slate-600 text-sm">End Date</Label>
-            <Input
-              id="endDate"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-40 glass-input"
-            />
-          </div>
           <Button 
             onClick={exportToExcel} 
             className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg shadow-blue-500/30 rounded-xl"

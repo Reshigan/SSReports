@@ -65,11 +65,13 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (overrideStartDate?: string, overrideEndDate?: string) => {
     try {
+      const start = overrideStartDate !== undefined ? overrideStartDate : startDate;
+      const end = overrideEndDate !== undefined ? overrideEndDate : endDate;
       const dateParams = new URLSearchParams();
-      if (startDate) dateParams.append('startDate', startDate);
-      if (endDate) dateParams.append('endDate', endDate);
+      if (start) dateParams.append('startDate', start);
+      if (end) dateParams.append('endDate', end);
       const queryString = dateParams.toString() ? `?${dateParams.toString()}` : '';
 
       const [kpisRes, agentsRes, hourlyRes, dailyRes, conversionRes] = await Promise.all([
@@ -105,7 +107,9 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
   };
 
   const handleClearFilter = () => {
-    fetchDashboardData();
+    setStartDate('');
+    setEndDate('');
+    fetchDashboardData('', '');
   };
 
   if (loading) {

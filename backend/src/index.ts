@@ -207,7 +207,21 @@ app.get('/api/dashboard/checkins-by-date', async (c) => {
 });
 
 app.get('/api/dashboard/checkins-by-hour', async (c) => {
+  const startDate = c.req.query('startDate');
+  const endDate = c.req.query('endDate');
+  
   try {
+    if (startDate || endDate) {
+      let query = `SELECT CAST(strftime('%H', timestamp) AS INTEGER) as hour, COUNT(*) as count FROM checkins WHERE 1=1`;
+      const params: string[] = [];
+      if (startDate) { query += ' AND timestamp >= ?'; params.push(startDate); }
+      if (endDate) { query += ' AND timestamp <= ? || " 23:59:59"'; params.push(endDate); }
+      query += ' GROUP BY hour ORDER BY hour';
+      const stmt = c.env.DB.prepare(query);
+      const result = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
+      return c.json({ data: result.results });
+    }
+    
     const result = await c.env.DB.prepare(`
       SELECT hour, SUM(count) as count 
       FROM checkins_by_hour 
@@ -223,7 +237,30 @@ app.get('/api/dashboard/checkins-by-hour', async (c) => {
 });
 
 app.get('/api/dashboard/checkins-by-day', async (c) => {
+  const startDate = c.req.query('startDate');
+  const endDate = c.req.query('endDate');
+  
   try {
+    if (startDate || endDate) {
+      let query = `
+        SELECT 
+          CASE CAST(strftime('%w', timestamp) AS INTEGER)
+            WHEN 0 THEN 'Sunday' WHEN 1 THEN 'Monday' WHEN 2 THEN 'Tuesday'
+            WHEN 3 THEN 'Wednesday' WHEN 4 THEN 'Thursday' WHEN 5 THEN 'Friday'
+            WHEN 6 THEN 'Saturday'
+          END as day_name,
+          CAST(strftime('%w', timestamp) AS INTEGER) as day_num,
+          COUNT(*) as count
+        FROM checkins WHERE 1=1`;
+      const params: string[] = [];
+      if (startDate) { query += ' AND timestamp >= ?'; params.push(startDate); }
+      if (endDate) { query += ' AND timestamp <= ? || " 23:59:59"'; params.push(endDate); }
+      query += ' GROUP BY day_num ORDER BY day_num';
+      const stmt = c.env.DB.prepare(query);
+      const result = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
+      return c.json({ data: result.results });
+    }
+    
     const result = await c.env.DB.prepare(`
       SELECT day_name, day_num, SUM(count) as count 
       FROM checkins_by_day 
@@ -239,7 +276,31 @@ app.get('/api/dashboard/checkins-by-day', async (c) => {
 });
 
 app.get('/api/dashboard/agent-performance', async (c) => {
+  const startDate = c.req.query('startDate');
+  const endDate = c.req.query('endDate');
+  
   try {
+    if (startDate || endDate) {
+      let query = `
+        SELECT 
+          c.agent_id,
+          COALESCE(ap.agent_name, 'Agent ' || c.agent_id) as agent_name,
+          COUNT(c.id) as checkin_count,
+          SUM(CASE WHEN vr.converted = 1 THEN 1 ELSE 0 END) as conversions,
+          ROUND(CASE WHEN COUNT(c.id) > 0 THEN (SUM(CASE WHEN vr.converted = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(c.id)) ELSE 0 END, 1) as conversion_rate
+        FROM checkins c
+        LEFT JOIN visit_responses vr ON c.id = vr.checkin_id
+        LEFT JOIN agent_performance ap ON c.agent_id = ap.agent_id
+        WHERE 1=1`;
+      const params: string[] = [];
+      if (startDate) { query += ' AND c.timestamp >= ?'; params.push(startDate); }
+      if (endDate) { query += ' AND c.timestamp <= ? || " 23:59:59"'; params.push(endDate); }
+      query += ' GROUP BY c.agent_id ORDER BY checkin_count DESC LIMIT 20';
+      const stmt = c.env.DB.prepare(query);
+      const result = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
+      return c.json({ data: result.results });
+    }
+    
     const result = await c.env.DB.prepare(`
       SELECT agent_id, agent_name, checkin_count, conversions, conversion_rate
       FROM agent_performance
