@@ -150,14 +150,14 @@ app.get('/api/dashboard/kpis', async (c) => {
     let dateFilter = '';
     let dateFilterVR = '';
     if (startDate && endDate) {
-      dateFilter = `WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate}'`;
-      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate}')`;
+      dateFilter = `WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate} 23:59:59'`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate} 23:59:59')`;
     } else if (startDate) {
       dateFilter = `WHERE timestamp >= '${startDate}'`;
       dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}')`;
     } else if (endDate) {
-      dateFilter = `WHERE timestamp <= '${endDate}'`;
-      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp <= '${endDate}')`;
+      dateFilter = `WHERE timestamp <= '${endDate} 23:59:59'`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp <= '${endDate} 23:59:59')`;
     }
     
     const kpis = await c.env.DB.prepare(`
@@ -215,7 +215,7 @@ app.get('/api/dashboard/checkins-by-hour', async (c) => {
       let query = `SELECT CAST(strftime('%H', timestamp) AS INTEGER) as hour, COUNT(*) as count FROM checkins WHERE 1=1`;
       const params: string[] = [];
       if (startDate) { query += ' AND timestamp >= ?'; params.push(startDate); }
-      if (endDate) { query += ' AND timestamp <= ? || " 23:59:59"'; params.push(endDate); }
+      if (endDate) { query += " AND timestamp <= ? || ' 23:59:59'"; params.push(endDate); }
       query += ' GROUP BY hour ORDER BY hour';
       const stmt = c.env.DB.prepare(query);
       const result = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
@@ -254,7 +254,7 @@ app.get('/api/dashboard/checkins-by-day', async (c) => {
         FROM checkins WHERE 1=1`;
       const params: string[] = [];
       if (startDate) { query += ' AND timestamp >= ?'; params.push(startDate); }
-      if (endDate) { query += ' AND timestamp <= ? || " 23:59:59"'; params.push(endDate); }
+      if (endDate) { query += " AND timestamp <= ? || ' 23:59:59'"; params.push(endDate); }
       query += ' GROUP BY day_num ORDER BY day_num';
       const stmt = c.env.DB.prepare(query);
       const result = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
@@ -294,7 +294,7 @@ app.get('/api/dashboard/agent-performance', async (c) => {
         WHERE 1=1`;
       const params: string[] = [];
       if (startDate) { query += ' AND c.timestamp >= ?'; params.push(startDate); }
-      if (endDate) { query += ' AND c.timestamp <= ? || " 23:59:59"'; params.push(endDate); }
+      if (endDate) { query += " AND c.timestamp <= ? || ' 23:59:59'"; params.push(endDate); }
       query += ' GROUP BY c.agent_id ORDER BY checkin_count DESC LIMIT 20';
       const stmt = c.env.DB.prepare(query);
       const result = params.length > 0 ? await stmt.bind(...params).all() : await stmt.all();
@@ -322,11 +322,11 @@ app.get('/api/dashboard/conversion-stats', async (c) => {
   try {
     let dateFilter = '';
     if (startDate && endDate) {
-      dateFilter = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate}')`;
+      dateFilter = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate} 23:59:59')`;
     } else if (startDate) {
       dateFilter = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}')`;
     } else if (endDate) {
-      dateFilter = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp <= '${endDate}')`;
+      dateFilter = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp <= '${endDate} 23:59:59')`;
     }
     
     const result = await c.env.DB.prepare(`
