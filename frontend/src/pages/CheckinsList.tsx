@@ -23,6 +23,10 @@ import {
 
 interface CheckinsListProps {
   apiUrl: string;
+  startDate: string;
+  endDate: string;
+  onStartDateChange: (date: string) => void;
+  onEndDateChange: (date: string) => void;
 }
 
 interface Checkin {
@@ -55,14 +59,12 @@ interface VisitResponse {
   created_at: string;
 }
 
-export default function CheckinsList({ apiUrl }: CheckinsListProps) {
+export default function CheckinsList({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: CheckinsListProps) {
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [limit] = useState(20);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [status, setStatus] = useState('');
   const [agentId, setAgentId] = useState('');
   const [selectedCheckin, setSelectedCheckin] = useState<Checkin | null>(null);
@@ -180,7 +182,7 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
               id="startDate"
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => onStartDateChange(e.target.value)}
               className="w-40 glass-input"
             />
           </div>
@@ -190,7 +192,7 @@ export default function CheckinsList({ apiUrl }: CheckinsListProps) {
               id="endDate"
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => onEndDateChange(e.target.value)}
               className="w-40 glass-input"
             />
           </div>

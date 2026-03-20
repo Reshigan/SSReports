@@ -191,8 +191,14 @@ app.get('/api/dashboard/checkins-by-date', async (c) => {
     
     const params: string[] = [];
     if (startDate && endDate) {
-      query += ' WHERE timestamp >= ? AND timestamp <= ?';
+      query += " WHERE timestamp >= ? AND timestamp <= ? || ' 23:59:59'";
       params.push(startDate, endDate);
+    } else if (startDate) {
+      query += ' WHERE timestamp >= ?';
+      params.push(startDate);
+    } else if (endDate) {
+      query += " WHERE timestamp <= ? || ' 23:59:59'";
+      params.push(endDate);
     }
     
     query += ' GROUP BY date(timestamp) ORDER BY date';
@@ -391,7 +397,7 @@ app.get('/api/checkins', async (c) => {
       params.push(startDate);
     }
     if (endDate) {
-      query += ' AND timestamp <= ?';
+      query += " AND timestamp <= ? || ' 23:59:59'";
       params.push(endDate);
     }
     if (agentId) {
@@ -417,7 +423,7 @@ app.get('/api/checkins', async (c) => {
       countParams.push(startDate);
     }
     if (endDate) {
-      countQuery += ' AND timestamp <= ?';
+      countQuery += " AND timestamp <= ? || ' 23:59:59'";
       countParams.push(endDate);
     }
     if (agentId) {
@@ -484,7 +490,7 @@ app.get('/api/checkins-map', async (c) => {
       params.push(startDate);
     }
     if (endDate) {
-      query += ' AND timestamp <= ?';
+      query += " AND timestamp <= ? || ' 23:59:59'";
       params.push(endDate);
     }
     
@@ -563,11 +569,11 @@ app.get('/api/shops-analytics', async (c) => {
   try {
     let dateFilter = '';
     if (startDate && endDate) {
-      dateFilter = `AND c.timestamp >= '${startDate}' AND c.timestamp <= '${endDate}'`;
+      dateFilter = `AND c.timestamp >= '${startDate}' AND c.timestamp <= '${endDate} 23:59:59'`;
     } else if (startDate) {
       dateFilter = `AND c.timestamp >= '${startDate}'`;
     } else if (endDate) {
-      dateFilter = `AND c.timestamp <= '${endDate}'`;
+      dateFilter = `AND c.timestamp <= '${endDate} 23:59:59'`;
     }
     
     const shops = await c.env.DB.prepare(`
@@ -616,14 +622,14 @@ app.get('/api/customers-analytics', async (c) => {
     let dateFilter = '';
     let dateFilterVR = '';
     if (startDate && endDate) {
-      dateFilter = `AND c.timestamp >= '${startDate}' AND c.timestamp <= '${endDate}'`;
-      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate}')`;
+      dateFilter = `AND c.timestamp >= '${startDate}' AND c.timestamp <= '${endDate} 23:59:59'`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate} 23:59:59')`;
     } else if (startDate) {
       dateFilter = `AND c.timestamp >= '${startDate}'`;
       dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}')`;
     } else if (endDate) {
-      dateFilter = `AND c.timestamp <= '${endDate}'`;
-      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp <= '${endDate}')`;
+      dateFilter = `AND c.timestamp <= '${endDate} 23:59:59'`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp <= '${endDate} 23:59:59')`;
     }
     
     const customers = await c.env.DB.prepare(`
@@ -840,7 +846,7 @@ app.get('/api/export/checkins', async (c) => {
       params.push(startDate);
     }
     if (endDate) {
-      query += ' AND c.timestamp <= ?';
+      query += " AND c.timestamp <= ? || ' 23:59:59'";
       params.push(endDate);
     }
     

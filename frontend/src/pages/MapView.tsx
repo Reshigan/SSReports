@@ -9,6 +9,10 @@ import { MapPin, Filter, RefreshCw } from 'lucide-react';
 
 interface MapViewProps {
   apiUrl: string;
+  startDate: string;
+  endDate: string;
+  onStartDateChange: (date: string) => void;
+  onEndDateChange: (date: string) => void;
 }
 
 interface Shop {
@@ -39,12 +43,10 @@ const defaultIcon = new Icon({
   shadowSize: [41, 41]
 });
 
-export default function MapView({ apiUrl }: MapViewProps) {
+export default function MapView({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: MapViewProps) {
   const [shops, setShops] = useState<Shop[]>([]);
   const [checkins, setCheckins] = useState<CheckinMarker[]>([]);
   const [loading, setLoading] = useState(true);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [showShops, setShowShops] = useState(true);
   const [showCheckins, setShowCheckins] = useState(true);
 
@@ -57,7 +59,7 @@ export default function MapView({ apiUrl }: MapViewProps) {
     try {
       const [shopsRes, checkinsRes] = await Promise.all([
         fetch(`${apiUrl}/api/shops?limit=500`),
-        fetch(`${apiUrl}/api/checkins-map${startDate && endDate ? `?startDate=${startDate}&endDate=${endDate}` : ''}`),
+        fetch(`${apiUrl}/api/checkins-map${startDate || endDate ? `?${startDate ? `startDate=${startDate}` : ''}${startDate && endDate ? '&' : ''}${endDate ? `endDate=${endDate}` : ''}` : ''}`),
       ]);
 
       const [shopsData, checkinsData] = await Promise.all([
@@ -114,7 +116,7 @@ export default function MapView({ apiUrl }: MapViewProps) {
               id="startDate"
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => onStartDateChange(e.target.value)}
               className="w-40 glass-input"
             />
           </div>
@@ -124,7 +126,7 @@ export default function MapView({ apiUrl }: MapViewProps) {
               id="endDate"
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => onEndDateChange(e.target.value)}
               className="w-40 glass-input"
             />
           </div>
