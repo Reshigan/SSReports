@@ -31,6 +31,8 @@ jobs:
           CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
+          SYNC_API_KEY: ${{ secrets.SYNC_API_KEY }}
+          WORKER_API_URL: ${{ secrets.WORKER_API_URL }}
         run: |
           cd backend
           python hourly-sync.py
