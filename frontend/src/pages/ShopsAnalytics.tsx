@@ -27,6 +27,10 @@ import DateRangeFilter from '@/components/DateRangeFilter';
 
 interface ShopsAnalyticsProps {
   apiUrl: string;
+  startDate: string;
+  endDate: string;
+  onStartDateChange: (date: string) => void;
+  onEndDateChange: (date: string) => void;
 }
 
 interface ShopAnalytics {
@@ -68,7 +72,7 @@ interface ShopDetail {
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
-export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
+export default function ShopsAnalytics({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: ShopsAnalyticsProps) {
   const [shops, setShops] = useState<ShopAnalytics[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -76,8 +80,6 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
   const [selectedShop, setSelectedShop] = useState<ShopDetail | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [photoModal, setPhotoModal] = useState<{ isOpen: boolean; url: string; title: string }>({
     isOpen: false,
     url: '',
@@ -114,8 +116,8 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
   };
 
   const handleClearFilter = () => {
-    setStartDate('');
-    setEndDate('');
+    onStartDateChange('');
+    onEndDateChange('');
     setPage(1);
     fetchShops('', '');
   };
@@ -184,8 +186,8 @@ export default function ShopsAnalytics({ apiUrl }: ShopsAnalyticsProps) {
         <DateRangeFilter
           startDate={startDate}
           endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
+          onStartDateChange={onStartDateChange}
+          onEndDateChange={onEndDateChange}
           onApply={handleDateFilter}
           onClear={handleClearFilter}
         />

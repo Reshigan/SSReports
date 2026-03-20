@@ -15,6 +15,10 @@ import autoTable from 'jspdf-autotable';
 
 interface ReportsProps {
   apiUrl: string;
+  startDate: string;
+  endDate: string;
+  onStartDateChange: (date: string) => void;
+  onEndDateChange: (date: string) => void;
 }
 
 interface AgentPerformance {
@@ -41,9 +45,7 @@ interface ExportData {
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
-export default function Reports({ apiUrl }: ReportsProps) {
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+export default function Reports({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: ReportsProps) {
   const [agentPerformance, setAgentPerformance] = useState<AgentPerformance[]>([]);
   const [hourlyData, setHourlyData] = useState<{ hour: number; count: number }[]>([]);
   const [dailyData, setDailyData] = useState<{ day_name: string; count: number }[]>([]);
@@ -100,8 +102,8 @@ export default function Reports({ apiUrl }: ReportsProps) {
   };
 
   const handleClearFilter = () => {
-    setStartDate('');
-    setEndDate('');
+    onStartDateChange('');
+    onEndDateChange('');
     fetchReportData('', '');
   };
 
@@ -263,8 +265,8 @@ export default function Reports({ apiUrl }: ReportsProps) {
         <DateRangeFilter
           startDate={startDate}
           endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
+          onStartDateChange={onStartDateChange}
+          onEndDateChange={onEndDateChange}
           onApply={handleDateFilter}
           onClear={handleClearFilter}
         />

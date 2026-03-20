@@ -27,6 +27,10 @@ import DateRangeFilter from '@/components/DateRangeFilter';
 
 interface CustomersAnalyticsProps {
   apiUrl: string;
+  startDate: string;
+  endDate: string;
+  onStartDateChange: (date: string) => void;
+  onEndDateChange: (date: string) => void;
 }
 
 interface CustomerRecord {
@@ -80,7 +84,7 @@ interface Stats {
 
 const COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6'];
 
-export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) {
+export default function CustomersAnalytics({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: CustomersAnalyticsProps) {
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -89,8 +93,6 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetail | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [photoModal, setPhotoModal] = useState<{ isOpen: boolean; url: string; title: string }>({
     isOpen: false,
     url: '',
@@ -128,8 +130,8 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
   };
 
   const handleClearFilter = () => {
-    setStartDate('');
-    setEndDate('');
+    onStartDateChange('');
+    onEndDateChange('');
     setPage(1);
     fetchCustomers('', '');
   };
@@ -204,8 +206,8 @@ export default function CustomersAnalytics({ apiUrl }: CustomersAnalyticsProps) 
         <DateRangeFilter
           startDate={startDate}
           endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
+          onStartDateChange={onStartDateChange}
+          onEndDateChange={onEndDateChange}
           onApply={handleDateFilter}
           onClear={handleClearFilter}
         />

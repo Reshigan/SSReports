@@ -12,6 +12,10 @@ import DateRangeFilter from '@/components/DateRangeFilter';
 
 interface DashboardProps {
   apiUrl: string;
+  startDate: string;
+  endDate: string;
+  onStartDateChange: (date: string) => void;
+  onEndDateChange: (date: string) => void;
 }
 
 interface KPIs {
@@ -51,15 +55,13 @@ interface ConversionStats {
 
 const COLORS = ['#3A57E8', '#00C8C8', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
-export default function Dashboard({ apiUrl }: DashboardProps) {
+export default function Dashboard({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: DashboardProps) {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [agentPerformance, setAgentPerformance] = useState<AgentPerformance[]>([]);
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [conversionStats, setConversionStats] = useState<ConversionStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
@@ -107,8 +109,8 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
   };
 
   const handleClearFilter = () => {
-    setStartDate('');
-    setEndDate('');
+    onStartDateChange('');
+    onEndDateChange('');
     fetchDashboardData('', '');
   };
 
@@ -184,8 +186,8 @@ export default function Dashboard({ apiUrl }: DashboardProps) {
         <DateRangeFilter
           startDate={startDate}
           endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
+          onStartDateChange={onStartDateChange}
+          onEndDateChange={onEndDateChange}
           onApply={handleDateFilter}
           onClear={handleClearFilter}
         />

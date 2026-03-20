@@ -14,6 +14,10 @@ import DateRangeFilter from '@/components/DateRangeFilter';
 
 interface InsightsProps {
   apiUrl: string;
+  startDate: string;
+  endDate: string;
+  onStartDateChange: (date: string) => void;
+  onEndDateChange: (date: string) => void;
 }
 
 interface KPIs {
@@ -53,15 +57,13 @@ interface ConversionStats {
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
-export default function Insights({ apiUrl }: InsightsProps) {
+export default function Insights({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: InsightsProps) {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [agentPerformance, setAgentPerformance] = useState<AgentPerformance[]>([]);
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [conversionStats, setConversionStats] = useState<ConversionStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     fetchInsightsData();
@@ -109,8 +111,8 @@ export default function Insights({ apiUrl }: InsightsProps) {
   };
 
   const handleClearFilter = () => {
-    setStartDate('');
-    setEndDate('');
+    onStartDateChange('');
+    onEndDateChange('');
     fetchInsightsData('', '');
   };
 
@@ -173,8 +175,8 @@ export default function Insights({ apiUrl }: InsightsProps) {
         <DateRangeFilter
           startDate={startDate}
           endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
+          onStartDateChange={onStartDateChange}
+          onEndDateChange={onEndDateChange}
           onApply={handleDateFilter}
           onClear={handleClearFilter}
         />
