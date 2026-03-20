@@ -32,7 +32,7 @@ CLOUDFLARE_EMAIL = os.environ.get("CLOUDFLARE_EMAIL")
 CLOUDFLARE_ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID")
 D1_DATABASE_ID = os.environ.get("D1_DATABASE_ID")
 SYNC_API_KEY = os.environ.get("SYNC_API_KEY")
-WORKER_API_URL = os.environ.get("WORKER_API_URL", "https://ssreports-api.reshigan-085.workers.dev")
+WORKER_API_URL = os.environ.get("WORKER_API_URL") or "https://ssreports-api.reshigan-085.workers.dev"
 try:
     PHOTO_SYNC_HOURS = int(os.environ.get("PHOTO_SYNC_HOURS", "2"))
 except ValueError:
