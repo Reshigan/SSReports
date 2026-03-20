@@ -243,6 +243,12 @@ def sync_photos(engine, since_hours=2):
         
         log(f"Found {len(checkins)} checkins with photos to sync")
         
+        # Debug: log sizes of first 3 photos to diagnose black photo issue
+        for debug_idx in range(min(3, len(checkins))):
+            debug_row = checkins.iloc[debug_idx]
+            debug_b64 = str(debug_row['photo_base64']) if not pd.isna(debug_row['photo_base64']) else ''
+            log(f"  DEBUG photo checkin {debug_row['id']}: base64 length={len(debug_b64)}, starts_with={debug_b64[:80]}...")
+        
         uploaded = 0
         errors = 0
         
