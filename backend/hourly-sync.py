@@ -229,6 +229,24 @@ def sync_photos(engine, since_hours=2):
     log(f"Syncing photos since {since_str}...")
     
     with engine.connect() as conn:
+        # Debug: check all columns in checkins table to find actual photo data
+        cols_df = pd.read_sql(text("SHOW COLUMNS FROM checkins"), conn)
+        log(f"  DEBUG checkins table columns: {list(cols_df['Field'].values)}")
+        for _, col_row in cols_df.iterrows():
+            if 'photo' in str(col_row['Field']).lower() or 'image' in str(col_row['Field']).lower() or 'blob' in str(col_row['Type']).lower():
+                log(f"  DEBUG photo-related column: {col_row['Field']} type={col_row['Type']}")
+        
+        # Also check photo_path values
+        path_check = pd.read_sql(text(f"""
+            SELECT id, photo_path, LENGTH(photo_base64) as b64_len
+            FROM checkins
+            WHERE timestamp >= '{since_str}'
+              AND (photo_base64 IS NOT NULL AND photo_base64 != '')
+            LIMIT 5
+        """), conn)
+        for _, pr in path_check.iterrows():
+            log(f"  DEBUG checkin {pr['id']}: photo_path={pr['photo_path']}, b64_len={pr['b64_len']}")
+        
         # Get checkins with photos from the last N hours
         checkins = pd.read_sql(text(f"""
             SELECT id, photo_base64
