@@ -229,81 +229,108 @@ def sync_photos(engine, since_hours=2):
     log(f"Syncing photos since {since_str}...")
     
     with engine.connect() as conn:
-        # Deep debug: examine photo data format in MySQL
-        debug_df = pd.read_sql(text("""
-            SELECT id, 
+        # Debug: check additional_photos_base64 format for checkins that have it
+        addl_debug = pd.read_sql(text("""
+            SELECT id,
                    LENGTH(photo_base64) as b64_len,
-                   SUBSTRING(photo_base64, 1, 200) as b64_start,
-                   SUBSTRING(photo_base64, LENGTH(photo_base64) - 50, 51) as b64_end,
                    LENGTH(additional_photos_base64) as addl_len,
-                   SUBSTRING(additional_photos_base64, 1, 200) as addl_start,
-                   photo_path
+                   SUBSTRING(additional_photos_base64, 1, 300) as addl_start
             FROM checkins
-            WHERE photo_base64 IS NOT NULL AND photo_base64 != ''
+            WHERE additional_photos_base64 IS NOT NULL AND additional_photos_base64 != ''
             ORDER BY id DESC
-            LIMIT 5
+            LIMIT 3
         """), conn)
-        for _, dr in debug_df.iterrows():
-            log(f"  DEBUG checkin {dr['id']}: b64_len={dr['b64_len']}, b64_start={str(dr['b64_start'])[:200]}")
-            log(f"  DEBUG checkin {dr['id']}: b64_end={dr['b64_end']}")
-            log(f"  DEBUG checkin {dr['id']}: addl_len={dr['addl_len']}, addl_start={str(dr['addl_start'])[:200]}")
-            log(f"  DEBUG checkin {dr['id']}: photo_path={dr['photo_path']}")
+        for _, dr in addl_debug.iterrows():
+            log(f"  DEBUG addl checkin {dr['id']}: b64_len={dr['b64_len']}, addl_len={dr['addl_len']}, addl_start={str(dr['addl_start'])[:300]}")
         
-        # Also check if there are distinct b64 values or all the same
-        distinct_check = pd.read_sql(text("""
-            SELECT COUNT(DISTINCT photo_base64) as distinct_count,
-                   COUNT(*) as total_count,
-                   MIN(LENGTH(photo_base64)) as min_len,
-                   MAX(LENGTH(photo_base64)) as max_len,
-                   COUNT(DISTINCT additional_photos_base64) as addl_distinct,
-                   SUM(CASE WHEN additional_photos_base64 IS NOT NULL AND additional_photos_base64 != '' THEN 1 ELSE 0 END) as addl_non_empty
+        # Also check checkins with large photo_base64 (real photos, not placeholders)
+        large_debug = pd.read_sql(text("""
+            SELECT id,
+                   LENGTH(photo_base64) as b64_len,
+                   SUBSTRING(photo_base64, 1, 100) as b64_start,
+                   LENGTH(additional_photos_base64) as addl_len
+            FROM checkins
+            WHERE LENGTH(photo_base64) > 2000
+            ORDER BY id DESC
+            LIMIT 3
+        """), conn)
+        for _, dr in large_debug.iterrows():
+            log(f"  DEBUG large_photo checkin {dr['id']}: b64_len={dr['b64_len']}, addl_len={dr['addl_len']}, b64_start={str(dr['b64_start'])[:100]}")
+        
+        # Count how many checkins have real photo data vs placeholder
+        size_check = pd.read_sql(text("""
+            SELECT 
+                SUM(CASE WHEN LENGTH(photo_base64) > 2000 THEN 1 ELSE 0 END) as large_photo_count,
+                SUM(CASE WHEN LENGTH(photo_base64) <= 2000 THEN 1 ELSE 0 END) as placeholder_count,
+                SUM(CASE WHEN additional_photos_base64 IS NOT NULL AND additional_photos_base64 != '' AND LENGTH(additional_photos_base64) > 100 THEN 1 ELSE 0 END) as has_addl_photos
             FROM checkins
             WHERE photo_base64 IS NOT NULL AND photo_base64 != ''
         """), conn)
-        for _, dc in distinct_check.iterrows():
-            log(f"  DEBUG SUMMARY: {dc['total_count']} checkins with photos, {dc['distinct_count']} distinct b64 values, min_len={dc['min_len']}, max_len={dc['max_len']}")
-            log(f"  DEBUG SUMMARY addl: {dc['addl_distinct']} distinct additional_photos values, {dc['addl_non_empty']} non-empty")
-        
-        # Check if there are any tables related to photos/files
-        tables_df = pd.read_sql(text("SHOW TABLES"), conn)
-        photo_tables = [t for t in tables_df.iloc[:, 0].values if 'photo' in str(t).lower() or 'file' in str(t).lower() or 'image' in str(t).lower() or 'media' in str(t).lower()]
-        log(f"  DEBUG photo/file/media tables: {photo_tables}")
-        log(f"  DEBUG all tables: {list(tables_df.iloc[:, 0].values)}")
-        
+        for _, sc in size_check.iterrows():
+            log(f"  DEBUG SIZE CHECK: {sc['large_photo_count']} with real photos (>2KB b64), {sc['placeholder_count']} with placeholder, {sc['has_addl_photos']} with additional_photos")
+
         # Get checkins with photos from the last N hours
+        # Fetch both photo_base64 and additional_photos_base64
         checkins = pd.read_sql(text(f"""
-            SELECT id, photo_base64
+            SELECT id, photo_base64, additional_photos_base64
             FROM checkins
             WHERE timestamp >= '{since_str}'
-              AND photo_base64 IS NOT NULL AND photo_base64 != ''
+              AND (
+                (photo_base64 IS NOT NULL AND photo_base64 != '' AND LENGTH(photo_base64) > 2000)
+                OR (additional_photos_base64 IS NOT NULL AND additional_photos_base64 != '' AND LENGTH(additional_photos_base64) > 100)
+              )
         """), conn)
         
         if len(checkins) == 0:
-            log("No new photos to sync")
+            log("No new photos to sync (all are placeholders or empty)")
             return 0
         
-        log(f"Found {len(checkins)} checkins with photos to sync")
-        
-        # Debug: log sizes of first 3 photos to diagnose black photo issue
-        for debug_idx in range(min(3, len(checkins))):
-            debug_row = checkins.iloc[debug_idx]
-            debug_b64 = str(debug_row['photo_base64']) if not pd.isna(debug_row['photo_base64']) else ''
-            log(f"  DEBUG photo checkin {debug_row['id']}: base64 length={len(debug_b64)}, starts_with={debug_b64[:80]}...")
+        log(f"Found {len(checkins)} checkins with real photo data to sync")
         
         uploaded = 0
         errors = 0
         
-        # Upload photos in batches of 5 to avoid request size limits
-        batch_size = 5
+        # Upload photos in batches of 3 (photos can be large)
+        batch_size = 3
         for i in range(0, len(checkins), batch_size):
             batch = checkins.iloc[i:i+batch_size]
             photos = []
             for _, row in batch.iterrows():
+                # Prefer additional_photos_base64 if it has data, otherwise use photo_base64
+                addl = row.get('additional_photos_base64')
                 photo_b64 = row['photo_base64']
-                if pd.isna(photo_b64) or not photo_b64:
+                
+                best_b64 = None
+                
+                # Check additional_photos_base64 first (may be JSON array or single base64)
+                if not pd.isna(addl) and addl and len(str(addl)) > 100:
+                    addl_str = str(addl).strip()
+                    # If it looks like a JSON array, extract the first image
+                    if addl_str.startswith('['):
+                        try:
+                            import json
+                            arr = json.loads(addl_str)
+                            if arr and len(arr) > 0:
+                                best_b64 = str(arr[0])
+                                log(f"  Using additional_photos_base64[0] for checkin {row['id']} (array of {len(arr)})")
+                        except (json.JSONDecodeError, TypeError):
+                            # Not JSON, use as-is
+                            best_b64 = addl_str
+                            log(f"  Using additional_photos_base64 as-is for checkin {row['id']} (not JSON)")
+                    else:
+                        best_b64 = addl_str
+                        log(f"  Using additional_photos_base64 for checkin {row['id']}")
+                
+                # Fall back to photo_base64 if it's a real photo (not the 1035-char placeholder)
+                if not best_b64 and not pd.isna(photo_b64) and photo_b64 and len(str(photo_b64)) > 2000:
+                    best_b64 = str(photo_b64)
+                    log(f"  Using photo_base64 for checkin {row['id']} (len={len(best_b64)})")
+                
+                if not best_b64:
                     continue
+                    
                 # Strip whitespace/newlines from base64 data
-                clean_b64 = str(photo_b64).replace('\n', '').replace('\r', '').replace(' ', '')
+                clean_b64 = best_b64.replace('\n', '').replace('\r', '').replace(' ', '')
                 photos.append({
                     'checkin_id': int(row['id']),
                     'photo_base64': clean_b64
