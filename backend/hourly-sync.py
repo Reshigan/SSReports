@@ -272,8 +272,8 @@ def sync_photos(engine, since_hours=2):
                             if arr and len(arr) > 0:
                                 best_b64 = str(arr[0])
                         except (json.JSONDecodeError, TypeError):
-                            # Not JSON, use as-is
-                            best_b64 = addl_str
+                            # Not valid JSON array, skip to allow fallback to photo_base64
+                            pass
                     else:
                         best_b64 = addl_str
                 
@@ -405,8 +405,12 @@ def main():
         responses_count = sync_new_visit_responses(engine, since_hours=2)
         shops_count = sync_new_shops(engine, since_hours=24)
         
-        # Sync photos to R2
-        photos_count = sync_photos(engine, since_hours=PHOTO_SYNC_HOURS)
+        # Sync photos to R2 (isolated so failures don't block aggregates)
+        try:
+            photos_count = sync_photos(engine, since_hours=PHOTO_SYNC_HOURS)
+        except Exception as e:
+            log(f"Photo sync error (non-fatal): {e}")
+            photos_count = 0
         
         # Update aggregates if there were changes
         if checkins_count > 0 or responses_count > 0:
