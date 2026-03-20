@@ -229,48 +229,8 @@ def sync_photos(engine, since_hours=2):
     log(f"Syncing photos since {since_str}...")
     
     with engine.connect() as conn:
-        # Debug: check additional_photos_base64 format for checkins that have it
-        addl_debug = pd.read_sql(text("""
-            SELECT id,
-                   LENGTH(photo_base64) as b64_len,
-                   LENGTH(additional_photos_base64) as addl_len,
-                   SUBSTRING(additional_photos_base64, 1, 300) as addl_start
-            FROM checkins
-            WHERE additional_photos_base64 IS NOT NULL AND additional_photos_base64 != ''
-            ORDER BY id DESC
-            LIMIT 3
-        """), conn)
-        for _, dr in addl_debug.iterrows():
-            log(f"  DEBUG addl checkin {dr['id']}: b64_len={dr['b64_len']}, addl_len={dr['addl_len']}, addl_start={str(dr['addl_start'])[:300]}")
-        
-        # Also check checkins with large photo_base64 (real photos, not placeholders)
-        large_debug = pd.read_sql(text("""
-            SELECT id,
-                   LENGTH(photo_base64) as b64_len,
-                   SUBSTRING(photo_base64, 1, 100) as b64_start,
-                   LENGTH(additional_photos_base64) as addl_len
-            FROM checkins
-            WHERE LENGTH(photo_base64) > 2000
-            ORDER BY id DESC
-            LIMIT 3
-        """), conn)
-        for _, dr in large_debug.iterrows():
-            log(f"  DEBUG large_photo checkin {dr['id']}: b64_len={dr['b64_len']}, addl_len={dr['addl_len']}, b64_start={str(dr['b64_start'])[:100]}")
-        
-        # Count how many checkins have real photo data vs placeholder
-        size_check = pd.read_sql(text("""
-            SELECT 
-                SUM(CASE WHEN LENGTH(photo_base64) > 2000 THEN 1 ELSE 0 END) as large_photo_count,
-                SUM(CASE WHEN LENGTH(photo_base64) <= 2000 THEN 1 ELSE 0 END) as placeholder_count,
-                SUM(CASE WHEN additional_photos_base64 IS NOT NULL AND additional_photos_base64 != '' AND LENGTH(additional_photos_base64) > 100 THEN 1 ELSE 0 END) as has_addl_photos
-            FROM checkins
-            WHERE photo_base64 IS NOT NULL AND photo_base64 != ''
-        """), conn)
-        for _, sc in size_check.iterrows():
-            log(f"  DEBUG SIZE CHECK: {sc['large_photo_count']} with real photos (>2KB b64), {sc['placeholder_count']} with placeholder, {sc['has_addl_photos']} with additional_photos")
-
-        # Get checkins with photos from the last N hours
-        # Fetch both photo_base64 and additional_photos_base64
+        # Get checkins with real photo data from the last N hours
+        # Skip placeholder photos (<=2000 chars) and fetch additional_photos_base64 too
         checkins = pd.read_sql(text(f"""
             SELECT id, photo_base64, additional_photos_base64
             FROM checkins
@@ -308,23 +268,18 @@ def sync_photos(engine, since_hours=2):
                     # If it looks like a JSON array, extract the first image
                     if addl_str.startswith('['):
                         try:
-                            import json
                             arr = json.loads(addl_str)
                             if arr and len(arr) > 0:
                                 best_b64 = str(arr[0])
-                                log(f"  Using additional_photos_base64[0] for checkin {row['id']} (array of {len(arr)})")
                         except (json.JSONDecodeError, TypeError):
                             # Not JSON, use as-is
                             best_b64 = addl_str
-                            log(f"  Using additional_photos_base64 as-is for checkin {row['id']} (not JSON)")
                     else:
                         best_b64 = addl_str
-                        log(f"  Using additional_photos_base64 for checkin {row['id']}")
                 
                 # Fall back to photo_base64 if it's a real photo (not the 1035-char placeholder)
                 if not best_b64 and not pd.isna(photo_b64) and photo_b64 and len(str(photo_b64)) > 2000:
                     best_b64 = str(photo_b64)
-                    log(f"  Using photo_base64 for checkin {row['id']} (len={len(best_b64)})")
                 
                 if not best_b64:
                     continue
