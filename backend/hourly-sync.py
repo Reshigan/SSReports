@@ -12,11 +12,14 @@ Required environment variables:
 - CLOUDFLARE_EMAIL: Cloudflare account email
 - CLOUDFLARE_ACCOUNT_ID: Cloudflare account ID
 - D1_DATABASE_ID: D1 database ID
+- SYNC_API_KEY: API key for internal photo upload endpoint
+- WORKER_API_URL: Base URL of the SSReports Worker API (e.g. https://ssreports-api.reshigan-085.workers.dev)
 """
 
 import json
 import os
 import sys
+import base64
 import requests
 from datetime import datetime, timedelta
 from sqlalchemy import create_engine, text
@@ -28,6 +31,8 @@ CLOUDFLARE_API_KEY = os.environ.get("CLOUDFLARE_API_KEY")
 CLOUDFLARE_EMAIL = os.environ.get("CLOUDFLARE_EMAIL")
 CLOUDFLARE_ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID")
 D1_DATABASE_ID = os.environ.get("D1_DATABASE_ID")
+SYNC_API_KEY = os.environ.get("SYNC_API_KEY")
+WORKER_API_URL = os.environ.get("WORKER_API_URL", "https://ssreports-api.reshigan-085.workers.dev")
 
 # Validate required environment variables
 required_vars = ["DATABASE_URI", "CLOUDFLARE_API_KEY", "CLOUDFLARE_EMAIL", "CLOUDFLARE_ACCOUNT_ID", "D1_DATABASE_ID"]
@@ -208,6 +213,81 @@ def sync_new_shops(engine, since_hours=24):
         log(f"Synced {count} new shops")
         return count
 
+def sync_photos(engine, since_hours=2):
+    """Sync photos from MySQL to R2 via Worker upload endpoint"""
+    if not SYNC_API_KEY:
+        log("SYNC_API_KEY not set, skipping photo sync")
+        return 0
+    
+    since_time = datetime.now() - timedelta(hours=since_hours)
+    since_str = since_time.strftime('%Y-%m-%d %H:%M:%S')
+    
+    log(f"Syncing photos since {since_str}...")
+    
+    with engine.connect() as conn:
+        # Get checkins with photos from the last N hours
+        checkins = pd.read_sql(text(f"""
+            SELECT id, photo_base64
+            FROM checkins
+            WHERE timestamp >= '{since_str}'
+              AND photo_base64 IS NOT NULL AND photo_base64 != ''
+        """), conn)
+        
+        if len(checkins) == 0:
+            log("No new photos to sync")
+            return 0
+        
+        log(f"Found {len(checkins)} checkins with photos to sync")
+        
+        uploaded = 0
+        errors = 0
+        
+        # Upload photos in batches of 5 to avoid request size limits
+        batch_size = 5
+        for i in range(0, len(checkins), batch_size):
+            batch = checkins.iloc[i:i+batch_size]
+            photos = []
+            for _, row in batch.iterrows():
+                photo_b64 = row['photo_base64']
+                if pd.isna(photo_b64) or not photo_b64:
+                    continue
+                photos.append({
+                    'checkin_id': int(row['id']),
+                    'photo_base64': str(photo_b64)
+                })
+            
+            if not photos:
+                continue
+            
+            try:
+                resp = requests.post(
+                    f"{WORKER_API_URL}/api/internal/upload-photos-batch",
+                    headers={
+                        'Content-Type': 'application/json',
+                        'X-Sync-API-Key': SYNC_API_KEY
+                    },
+                    json={'photos': photos},
+                    timeout=120
+                )
+                
+                if resp.status_code == 200:
+                    result = resp.json()
+                    for r in result.get('results', []):
+                        if r.get('success'):
+                            uploaded += 1
+                        else:
+                            errors += 1
+                            log(f"  Error uploading photo for checkin {r.get('checkin_id')}: {r.get('error')}")
+                else:
+                    errors += len(photos)
+                    log(f"  Batch upload failed with status {resp.status_code}: {resp.text[:200]}")
+            except Exception as e:
+                errors += len(photos)
+                log(f"  Batch upload error: {e}")
+        
+        log(f"Photo sync complete: {uploaded} uploaded, {errors} errors")
+        return uploaded
+
 def update_aggregates(engine):
     """Update aggregated tables"""
     log("Updating aggregated tables...")
@@ -290,11 +370,14 @@ def main():
         responses_count = sync_new_visit_responses(engine, since_hours=2)
         shops_count = sync_new_shops(engine, since_hours=24)
         
+        # Sync photos to R2
+        photos_count = sync_photos(engine, since_hours=2)
+        
         # Update aggregates if there were changes
         if checkins_count > 0 or responses_count > 0:
             update_aggregates(engine)
         
-        log(f"Sync complete: {checkins_count} checkins, {responses_count} responses, {shops_count} shops")
+        log(f"Sync complete: {checkins_count} checkins, {responses_count} responses, {shops_count} shops, {photos_count} photos")
         log("=" * 50)
         
     except Exception as e:
