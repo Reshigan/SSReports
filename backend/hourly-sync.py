@@ -33,7 +33,10 @@ CLOUDFLARE_ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID")
 D1_DATABASE_ID = os.environ.get("D1_DATABASE_ID")
 SYNC_API_KEY = os.environ.get("SYNC_API_KEY")
 WORKER_API_URL = os.environ.get("WORKER_API_URL", "https://ssreports-api.reshigan-085.workers.dev")
-PHOTO_SYNC_HOURS = int(os.environ.get("PHOTO_SYNC_HOURS", "2"))  # Override for historical backfill
+try:
+    PHOTO_SYNC_HOURS = int(os.environ.get("PHOTO_SYNC_HOURS", "2"))
+except ValueError:
+    PHOTO_SYNC_HOURS = 2  # Default to 2 hours if invalid value provided
 
 # Validate required environment variables
 required_vars = ["DATABASE_URI", "CLOUDFLARE_API_KEY", "CLOUDFLARE_EMAIL", "CLOUDFLARE_ACCOUNT_ID", "D1_DATABASE_ID"]
