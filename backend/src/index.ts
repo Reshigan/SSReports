@@ -744,11 +744,13 @@ app.post('/api/internal/upload-photo', async (c) => {
       return c.json({ error: 'checkin_id and photo_base64 are required' }, 400);
     }
 
-    // Strip data URI prefix if present
+    // Strip data URI prefix if present and clean whitespace
     let base64Data = photo_base64;
     if (base64Data.startsWith('data:')) {
       base64Data = base64Data.split(',')[1];
     }
+    // Remove whitespace/newlines that break atob()
+    base64Data = base64Data.replace(/[\s\r\n]+/g, '');
 
     // Decode base64 to bytes
     const binaryString = atob(base64Data);
@@ -792,6 +794,8 @@ app.post('/api/internal/upload-photos-batch', async (c) => {
         if (base64Data.startsWith('data:')) {
           base64Data = base64Data.split(',')[1];
         }
+        // Remove whitespace/newlines that break atob()
+        base64Data = base64Data.replace(/[\s\r\n]+/g, '');
 
         const binaryString = atob(base64Data);
         const bytes = new Uint8Array(binaryString.length);

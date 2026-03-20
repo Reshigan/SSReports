@@ -255,9 +255,11 @@ def sync_photos(engine, since_hours=2):
                 photo_b64 = row['photo_base64']
                 if pd.isna(photo_b64) or not photo_b64:
                     continue
+                # Strip whitespace/newlines from base64 data
+                clean_b64 = str(photo_b64).replace('\n', '').replace('\r', '').replace(' ', '')
                 photos.append({
                     'checkin_id': int(row['id']),
-                    'photo_base64': str(photo_b64)
+                    'photo_base64': clean_b64
                 })
             
             if not photos:
