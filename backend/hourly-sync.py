@@ -33,6 +33,7 @@ CLOUDFLARE_ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID")
 D1_DATABASE_ID = os.environ.get("D1_DATABASE_ID")
 SYNC_API_KEY = os.environ.get("SYNC_API_KEY")
 WORKER_API_URL = os.environ.get("WORKER_API_URL", "https://ssreports-api.reshigan-085.workers.dev")
+PHOTO_SYNC_HOURS = int(os.environ.get("PHOTO_SYNC_HOURS", "2"))  # Override for historical backfill
 
 # Validate required environment variables
 required_vars = ["DATABASE_URI", "CLOUDFLARE_API_KEY", "CLOUDFLARE_EMAIL", "CLOUDFLARE_ACCOUNT_ID", "D1_DATABASE_ID"]
@@ -371,7 +372,7 @@ def main():
         shops_count = sync_new_shops(engine, since_hours=24)
         
         # Sync photos to R2
-        photos_count = sync_photos(engine, since_hours=2)
+        photos_count = sync_photos(engine, since_hours=PHOTO_SYNC_HOURS)
         
         # Update aggregates if there were changes
         if checkins_count > 0 or responses_count > 0:
