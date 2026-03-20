@@ -10,6 +10,7 @@ interface Env {
   MYSQL_USER: string;
   MYSQL_PASSWORD: string;
   JWT_SECRET: string;
+  SYNC_API_KEY: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -725,6 +726,98 @@ app.get('/api/photos/:checkinId', async (c) => {
   } catch (error) {
     console.error('Get photo error:', error);
     return c.json({ error: 'Failed to fetch photo' }, 500);
+  }
+});
+
+// Upload photo to R2 (used by hourly sync job)
+app.post('/api/internal/upload-photo', async (c) => {
+  const apiKey = c.req.header('X-Sync-API-Key');
+  if (!apiKey || apiKey !== c.env.SYNC_API_KEY) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const body = await c.req.json() as { checkin_id: number; photo_base64: string };
+    const { checkin_id, photo_base64 } = body;
+
+    if (!checkin_id || !photo_base64) {
+      return c.json({ error: 'checkin_id and photo_base64 are required' }, 400);
+    }
+
+    // Strip data URI prefix if present and clean whitespace
+    let base64Data = photo_base64;
+    if (base64Data.startsWith('data:')) {
+      base64Data = base64Data.split(',')[1];
+    }
+    // Remove whitespace/newlines that break atob()
+    base64Data = base64Data.replace(/[\s\r\n]+/g, '');
+
+    // Decode base64 to bytes
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const key = `checkins/${checkin_id}.jpg`;
+    await c.env.PHOTOS.put(key, bytes, {
+      httpMetadata: { contentType: 'image/jpeg' },
+    });
+
+    return c.json({ success: true, key });
+  } catch (error) {
+    console.error('Upload photo error:', error);
+    return c.json({ error: 'Failed to upload photo' }, 500);
+  }
+});
+
+// Batch upload photos to R2 (used by hourly sync job)
+app.post('/api/internal/upload-photos-batch', async (c) => {
+  const apiKey = c.req.header('X-Sync-API-Key');
+  if (!apiKey || apiKey !== c.env.SYNC_API_KEY) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+
+  try {
+    const body = await c.req.json() as { photos: { checkin_id: number; photo_base64: string }[] };
+    const { photos } = body;
+
+    if (!photos || !Array.isArray(photos)) {
+      return c.json({ error: 'photos array is required' }, 400);
+    }
+
+    const results: { checkin_id: number; success: boolean; error?: string }[] = [];
+
+    for (const photo of photos) {
+      try {
+        let base64Data = photo.photo_base64;
+        if (base64Data.startsWith('data:')) {
+          base64Data = base64Data.split(',')[1];
+        }
+        // Remove whitespace/newlines that break atob()
+        base64Data = base64Data.replace(/[\s\r\n]+/g, '');
+
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        const key = `checkins/${photo.checkin_id}.jpg`;
+        await c.env.PHOTOS.put(key, bytes, {
+          httpMetadata: { contentType: 'image/jpeg' },
+        });
+
+        results.push({ checkin_id: photo.checkin_id, success: true });
+      } catch (err) {
+        results.push({ checkin_id: photo.checkin_id, success: false, error: String(err) });
+      }
+    }
+
+    return c.json({ success: true, results });
+  } catch (error) {
+    console.error('Batch upload photos error:', error);
+    return c.json({ error: 'Failed to upload photos' }, 500);
   }
 });
 

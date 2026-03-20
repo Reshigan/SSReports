@@ -12,11 +12,14 @@ Required environment variables:
 - CLOUDFLARE_EMAIL: Cloudflare account email
 - CLOUDFLARE_ACCOUNT_ID: Cloudflare account ID
 - D1_DATABASE_ID: D1 database ID
+- SYNC_API_KEY: API key for internal photo upload endpoint
+- WORKER_API_URL: Base URL of the SSReports Worker API (e.g. https://ssreports-api.reshigan-085.workers.dev)
 """
 
 import json
 import os
 import sys
+import base64
 import requests
 from datetime import datetime, timedelta
 from sqlalchemy import create_engine, text
@@ -28,6 +31,12 @@ CLOUDFLARE_API_KEY = os.environ.get("CLOUDFLARE_API_KEY")
 CLOUDFLARE_EMAIL = os.environ.get("CLOUDFLARE_EMAIL")
 CLOUDFLARE_ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID")
 D1_DATABASE_ID = os.environ.get("D1_DATABASE_ID")
+SYNC_API_KEY = os.environ.get("SYNC_API_KEY")
+WORKER_API_URL = os.environ.get("WORKER_API_URL") or "https://ssreports-api.reshigan-085.workers.dev"
+try:
+    PHOTO_SYNC_HOURS = int(os.environ.get("PHOTO_SYNC_HOURS", "2"))
+except ValueError:
+    PHOTO_SYNC_HOURS = 2  # Default to 2 hours if invalid value provided
 
 # Validate required environment variables
 required_vars = ["DATABASE_URI", "CLOUDFLARE_API_KEY", "CLOUDFLARE_EMAIL", "CLOUDFLARE_ACCOUNT_ID", "D1_DATABASE_ID"]
@@ -208,6 +217,112 @@ def sync_new_shops(engine, since_hours=24):
         log(f"Synced {count} new shops")
         return count
 
+def sync_photos(engine, since_hours=2):
+    """Sync photos from MySQL to R2 via Worker upload endpoint"""
+    if not SYNC_API_KEY:
+        log("SYNC_API_KEY not set, skipping photo sync")
+        return 0
+    
+    since_time = datetime.now() - timedelta(hours=since_hours)
+    since_str = since_time.strftime('%Y-%m-%d %H:%M:%S')
+    
+    log(f"Syncing photos since {since_str}...")
+    
+    with engine.connect() as conn:
+        # Get checkins with real photo data from the last N hours
+        # Skip placeholder photos (<=2000 chars) and fetch additional_photos_base64 too
+        checkins = pd.read_sql(text(f"""
+            SELECT id, photo_base64, additional_photos_base64
+            FROM checkins
+            WHERE timestamp >= '{since_str}'
+              AND (
+                (photo_base64 IS NOT NULL AND photo_base64 != '' AND LENGTH(photo_base64) > 2000)
+                OR (additional_photos_base64 IS NOT NULL AND additional_photos_base64 != '' AND LENGTH(additional_photos_base64) > 100)
+              )
+        """), conn)
+        
+        if len(checkins) == 0:
+            log("No new photos to sync (all are placeholders or empty)")
+            return 0
+        
+        log(f"Found {len(checkins)} checkins with real photo data to sync")
+        
+        uploaded = 0
+        errors = 0
+        
+        # Upload photos in batches of 3 (photos can be large)
+        batch_size = 3
+        for i in range(0, len(checkins), batch_size):
+            batch = checkins.iloc[i:i+batch_size]
+            photos = []
+            for _, row in batch.iterrows():
+                # Prefer additional_photos_base64 if it has data, otherwise use photo_base64
+                addl = row.get('additional_photos_base64')
+                photo_b64 = row['photo_base64']
+                
+                best_b64 = None
+                
+                # Check additional_photos_base64 first (may be JSON array or single base64)
+                if not pd.isna(addl) and addl and len(str(addl)) > 100:
+                    addl_str = str(addl).strip()
+                    # If it looks like a JSON array, extract the first image
+                    if addl_str.startswith('['):
+                        try:
+                            arr = json.loads(addl_str)
+                            if arr and len(arr) > 0:
+                                best_b64 = str(arr[0])
+                        except (json.JSONDecodeError, TypeError):
+                            # Not valid JSON array, skip to allow fallback to photo_base64
+                            pass
+                    else:
+                        best_b64 = addl_str
+                
+                # Fall back to photo_base64 if it's a real photo (not the 1035-char placeholder)
+                if not best_b64 and not pd.isna(photo_b64) and photo_b64 and len(str(photo_b64)) > 2000:
+                    best_b64 = str(photo_b64)
+                
+                if not best_b64:
+                    continue
+                    
+                # Strip whitespace/newlines from base64 data
+                clean_b64 = best_b64.replace('\n', '').replace('\r', '').replace(' ', '')
+                photos.append({
+                    'checkin_id': int(row['id']),
+                    'photo_base64': clean_b64
+                })
+            
+            if not photos:
+                continue
+            
+            try:
+                resp = requests.post(
+                    f"{WORKER_API_URL}/api/internal/upload-photos-batch",
+                    headers={
+                        'Content-Type': 'application/json',
+                        'X-Sync-API-Key': SYNC_API_KEY
+                    },
+                    json={'photos': photos},
+                    timeout=120
+                )
+                
+                if resp.status_code == 200:
+                    result = resp.json()
+                    for r in result.get('results', []):
+                        if r.get('success'):
+                            uploaded += 1
+                        else:
+                            errors += 1
+                            log(f"  Error uploading photo for checkin {r.get('checkin_id')}: {r.get('error')}")
+                else:
+                    errors += len(photos)
+                    log(f"  Batch upload failed with status {resp.status_code}: {resp.text[:200]}")
+            except Exception as e:
+                errors += len(photos)
+                log(f"  Batch upload error: {e}")
+        
+        log(f"Photo sync complete: {uploaded} uploaded, {errors} errors")
+        return uploaded
+
 def update_aggregates(engine):
     """Update aggregated tables"""
     log("Updating aggregated tables...")
@@ -290,11 +405,18 @@ def main():
         responses_count = sync_new_visit_responses(engine, since_hours=2)
         shops_count = sync_new_shops(engine, since_hours=24)
         
+        # Sync photos to R2 (isolated so failures don't block aggregates)
+        try:
+            photos_count = sync_photos(engine, since_hours=PHOTO_SYNC_HOURS)
+        except Exception as e:
+            log(f"Photo sync error (non-fatal): {e}")
+            photos_count = 0
+        
         # Update aggregates if there were changes
         if checkins_count > 0 or responses_count > 0:
             update_aggregates(engine)
         
-        log(f"Sync complete: {checkins_count} checkins, {responses_count} responses, {shops_count} shops")
+        log(f"Sync complete: {checkins_count} checkins, {responses_count} responses, {shops_count} shops, {photos_count} photos")
         log("=" * 50)
         
     except Exception as e:
