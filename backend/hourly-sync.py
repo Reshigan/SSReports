@@ -229,23 +229,46 @@ def sync_photos(engine, since_hours=2):
     log(f"Syncing photos since {since_str}...")
     
     with engine.connect() as conn:
-        # Debug: check all columns in checkins table to find actual photo data
-        cols_df = pd.read_sql(text("SHOW COLUMNS FROM checkins"), conn)
-        log(f"  DEBUG checkins table columns: {list(cols_df['Field'].values)}")
-        for _, col_row in cols_df.iterrows():
-            if 'photo' in str(col_row['Field']).lower() or 'image' in str(col_row['Field']).lower() or 'blob' in str(col_row['Type']).lower():
-                log(f"  DEBUG photo-related column: {col_row['Field']} type={col_row['Type']}")
-        
-        # Also check photo_path values
-        path_check = pd.read_sql(text(f"""
-            SELECT id, photo_path, LENGTH(photo_base64) as b64_len
+        # Deep debug: examine photo data format in MySQL
+        debug_df = pd.read_sql(text("""
+            SELECT id, 
+                   LENGTH(photo_base64) as b64_len,
+                   SUBSTRING(photo_base64, 1, 200) as b64_start,
+                   SUBSTRING(photo_base64, LENGTH(photo_base64) - 50, 51) as b64_end,
+                   LENGTH(additional_photos_base64) as addl_len,
+                   SUBSTRING(additional_photos_base64, 1, 200) as addl_start,
+                   photo_path
             FROM checkins
-            WHERE timestamp >= '{since_str}'
-              AND (photo_base64 IS NOT NULL AND photo_base64 != '')
+            WHERE photo_base64 IS NOT NULL AND photo_base64 != ''
+            ORDER BY id DESC
             LIMIT 5
         """), conn)
-        for _, pr in path_check.iterrows():
-            log(f"  DEBUG checkin {pr['id']}: photo_path={pr['photo_path']}, b64_len={pr['b64_len']}")
+        for _, dr in debug_df.iterrows():
+            log(f"  DEBUG checkin {dr['id']}: b64_len={dr['b64_len']}, b64_start={str(dr['b64_start'])[:200]}")
+            log(f"  DEBUG checkin {dr['id']}: b64_end={dr['b64_end']}")
+            log(f"  DEBUG checkin {dr['id']}: addl_len={dr['addl_len']}, addl_start={str(dr['addl_start'])[:200]}")
+            log(f"  DEBUG checkin {dr['id']}: photo_path={dr['photo_path']}")
+        
+        # Also check if there are distinct b64 values or all the same
+        distinct_check = pd.read_sql(text("""
+            SELECT COUNT(DISTINCT photo_base64) as distinct_count,
+                   COUNT(*) as total_count,
+                   MIN(LENGTH(photo_base64)) as min_len,
+                   MAX(LENGTH(photo_base64)) as max_len,
+                   COUNT(DISTINCT additional_photos_base64) as addl_distinct,
+                   SUM(CASE WHEN additional_photos_base64 IS NOT NULL AND additional_photos_base64 != '' THEN 1 ELSE 0 END) as addl_non_empty
+            FROM checkins
+            WHERE photo_base64 IS NOT NULL AND photo_base64 != ''
+        """), conn)
+        for _, dc in distinct_check.iterrows():
+            log(f"  DEBUG SUMMARY: {dc['total_count']} checkins with photos, {dc['distinct_count']} distinct b64 values, min_len={dc['min_len']}, max_len={dc['max_len']}")
+            log(f"  DEBUG SUMMARY addl: {dc['addl_distinct']} distinct additional_photos values, {dc['addl_non_empty']} non-empty")
+        
+        # Check if there are any tables related to photos/files
+        tables_df = pd.read_sql(text("SHOW TABLES"), conn)
+        photo_tables = [t for t in tables_df.iloc[:, 0].values if 'photo' in str(t).lower() or 'file' in str(t).lower() or 'image' in str(t).lower() or 'media' in str(t).lower()]
+        log(f"  DEBUG photo/file/media tables: {photo_tables}")
+        log(f"  DEBUG all tables: {list(tables_df.iloc[:, 0].values)}")
         
         # Get checkins with photos from the last N hours
         checkins = pd.read_sql(text(f"""
