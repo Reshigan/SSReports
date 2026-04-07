@@ -11,7 +11,6 @@ import {
   Store, UserCheck, BarChart3, PieChart as PieChartIcon
 } from 'lucide-react';
 import DateRangeFilter from '@/components/DateRangeFilter';
-import DataSourceFilter from '@/components/DataSourceFilter';
 
 interface InsightsProps {
   apiUrl: string;
@@ -19,8 +18,6 @@ interface InsightsProps {
   endDate: string;
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
-  dataSource: string;
-  onDataSourceChange: (source: string) => void;
 }
 
 interface KPIs {
@@ -60,7 +57,7 @@ interface ConversionStats {
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
-export default function Insights({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange, dataSource, onDataSourceChange }: InsightsProps) {
+export default function Insights({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: InsightsProps) {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [agentPerformance, setAgentPerformance] = useState<AgentPerformance[]>([]);
   const [hourlyData, setHourlyData] = useState<HourlyData[]>([]);
@@ -70,7 +67,7 @@ export default function Insights({ apiUrl, startDate, endDate, onStartDateChange
 
   useEffect(() => {
     fetchInsightsData();
-  }, [dataSource]);
+  }, []);
 
   const fetchInsightsData = async (overrideStartDate?: string, overrideEndDate?: string) => {
     try {
@@ -79,7 +76,6 @@ export default function Insights({ apiUrl, startDate, endDate, onStartDateChange
       const dateParams = new URLSearchParams();
       if (start) dateParams.append('startDate', start);
       if (end) dateParams.append('endDate', end);
-      if (dataSource && dataSource !== 'all') dateParams.append('source', dataSource);
       const queryString = dateParams.toString() ? `?${dateParams.toString()}` : '';
 
       const [kpisRes, agentsRes, hourlyRes, dailyRes, conversionRes] = await Promise.all([
@@ -169,7 +165,7 @@ export default function Insights({ apiUrl, startDate, endDate, onStartDateChange
       <div className="glass-card-solid rounded-2xl p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">{dataSource === 'fieldvibe' ? 'FieldVibe' : dataSource === 'salessync' ? 'SalesSync' : 'Unified'} Data Insights</h1>
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">FieldVibe Data Insights</h1>
           <p className="text-slate-600 text-lg">Comprehensive analysis and performance summary</p>
           <p className="text-slate-500 text-sm mt-2">Data period: September 2025 - February 2026</p>
         </div>
@@ -185,7 +181,6 @@ export default function Insights({ apiUrl, startDate, endDate, onStartDateChange
             onApply={handleDateFilter}
             onClear={handleClearFilter}
           />
-          <DataSourceFilter source={dataSource} onSourceChange={onDataSourceChange} />
         </div>
       </div>
 

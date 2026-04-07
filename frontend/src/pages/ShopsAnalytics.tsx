@@ -24,7 +24,6 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import PhotoModal from '@/components/PhotoModal';
 import DateRangeFilter from '@/components/DateRangeFilter';
-import DataSourceFilter from '@/components/DataSourceFilter';
 
 interface ShopsAnalyticsProps {
   apiUrl: string;
@@ -32,8 +31,6 @@ interface ShopsAnalyticsProps {
   endDate: string;
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
-  dataSource: string;
-  onDataSourceChange: (source: string) => void;
 }
 
 interface ShopAnalytics {
@@ -75,7 +72,7 @@ interface ShopDetail {
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
-export default function ShopsAnalytics({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange, dataSource, onDataSourceChange }: ShopsAnalyticsProps) {
+export default function ShopsAnalytics({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: ShopsAnalyticsProps) {
   const [shops, setShops] = useState<ShopAnalytics[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -92,7 +89,7 @@ export default function ShopsAnalytics({ apiUrl, startDate, endDate, onStartDate
 
   useEffect(() => {
     fetchShops();
-  }, [page, dataSource]);
+  }, [page]);
 
   const fetchShops = async (overrideStartDate?: string, overrideEndDate?: string) => {
     setLoading(true);
@@ -102,7 +99,6 @@ export default function ShopsAnalytics({ apiUrl, startDate, endDate, onStartDate
       let url = `${apiUrl}/api/shops-analytics?page=${page}&limit=${limit}`;
       if (start) url += `&startDate=${start}`;
       if (end) url += `&endDate=${end}`;
-      if (dataSource && dataSource !== 'all') url += `&source=${dataSource}`;
       const res = await fetch(url);
       const data = await res.json();
       setShops(data.shops || []);
@@ -196,7 +192,6 @@ export default function ShopsAnalytics({ apiUrl, startDate, endDate, onStartDate
             onApply={handleDateFilter}
             onClear={handleClearFilter}
           />
-          <DataSourceFilter source={dataSource} onSourceChange={onDataSourceChange} />
         </div>
       </div>
 
