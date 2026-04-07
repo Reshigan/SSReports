@@ -129,6 +129,7 @@ function AppContent() {
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [dataSource, setDataSource] = useState('all');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -169,13 +170,13 @@ function AppContent() {
       <Sidebar user={user} onLogout={handleLogout} />
       <main className="flex-1 p-4 lg:p-8 pt-16 lg:pt-8 overflow-auto ml-0 lg:ml-0">
         <Routes>
-                                        <Route path="/" element={<Dashboard apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />} />
-                                        <Route path="/insights" element={<Insights apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />} />
-                                        <Route path="/shops" element={<ShopsAnalytics apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />} />
-                                        <Route path="/customers" element={<CustomersAnalytics apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />} />
-                                        <Route path="/map" element={<MapView apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />} />
-                                        <Route path="/checkins" element={<CheckinsList apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />} />
-                                        <Route path="/reports" element={<Reports apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />} />
+                                        <Route path="/" element={<Dashboard apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} dataSource={dataSource} onDataSourceChange={setDataSource} />} />
+                                        <Route path="/insights" element={<Insights apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} dataSource={dataSource} onDataSourceChange={setDataSource} />} />
+                                        <Route path="/shops" element={<ShopsAnalytics apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} dataSource={dataSource} onDataSourceChange={setDataSource} />} />
+                                        <Route path="/customers" element={<CustomersAnalytics apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} dataSource={dataSource} onDataSourceChange={setDataSource} />} />
+                                        <Route path="/map" element={<MapView apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} dataSource={dataSource} onDataSourceChange={setDataSource} />} />
+                                        <Route path="/checkins" element={<CheckinsList apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} dataSource={dataSource} onDataSourceChange={setDataSource} />} />
+                                        <Route path="/reports" element={<Reports apiUrl={API_URL} startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} dataSource={dataSource} onDataSourceChange={setDataSource} />} />
                                         <Route path="/users" element={<UserManagement apiUrl={API_URL} />} />
                                         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

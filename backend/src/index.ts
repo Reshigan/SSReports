@@ -11,6 +11,16 @@ interface Env {
   MYSQL_PASSWORD: string;
   JWT_SECRET: string;
   SYNC_API_KEY: string;
+  FIELDVIBE_D1: D1Database;
+}
+
+// Helper to build source filter clause
+function sourceFilter(source: string | undefined, prefix = ''): string {
+  const col = prefix ? `${prefix}.data_source` : 'data_source';
+  if (!source || source === 'all') return '';
+  if (source === 'fieldvibe') return ` AND ${col} = 'fieldvibe'`;
+  if (source === 'salessync') return ` AND ${col} = 'salessync'`;
+  return '';
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -22,7 +32,7 @@ app.use('*', cors({
 }));
 
 app.get('/', (c) => {
-  return c.json({ message: 'SSReports API', version: '1.0.0' });
+  return c.json({ message: 'SSReports API', version: '2.0.0' });
 });
 
 app.get('/api/health', (c) => {
@@ -146,19 +156,28 @@ app.delete('/api/users/:id', async (c) => {
 app.get('/api/dashboard/kpis', async (c) => {
   const startDate = c.req.query('startDate');
   const endDate = c.req.query('endDate');
+  const source = c.req.query('source');
+  const sf = sourceFilter(source);
   
   try {
     let dateFilter = '';
     let dateFilterVR = '';
     if (startDate && endDate) {
       dateFilter = `WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate} 23:59:59'`;
-      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate} 23:59:59')`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}' AND timestamp <= '${endDate} 23:59:59'${sf})`;
     } else if (startDate) {
       dateFilter = `WHERE timestamp >= '${startDate}'`;
-      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}')`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp >= '${startDate}'${sf})`;
     } else if (endDate) {
       dateFilter = `WHERE timestamp <= '${endDate} 23:59:59'`;
-      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp <= '${endDate} 23:59:59')`;
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE timestamp <= '${endDate} 23:59:59'${sf})`;
+    } else if (sf) {
+      dateFilterVR = `WHERE checkin_id IN (SELECT id FROM checkins WHERE 1=1${sf})`;
+    }
+    
+    // Append source filter to dateFilter
+    if (sf) {
+      dateFilter = dateFilter ? dateFilter + sf : `WHERE 1=1${sf}`;
     }
     
     const kpis = await c.env.DB.prepare(`
@@ -167,7 +186,7 @@ app.get('/api/dashboard/kpis', async (c) => {
         (SELECT COUNT(*) FROM checkins ${dateFilter ? dateFilter + " AND status = 'APPROVED'" : "WHERE status = 'APPROVED'"}) as approved_checkins,
         (SELECT COUNT(*) FROM checkins ${dateFilter ? dateFilter + " AND status = 'PENDING'" : "WHERE status = 'PENDING'"}) as pending_checkins,
         (SELECT COUNT(DISTINCT agent_id) FROM checkins ${dateFilter}) as active_agents,
-        (SELECT COUNT(*) FROM shops) as total_shops,
+        (SELECT COUNT(*) FROM shops${sf ? ` WHERE 1=1${sf}` : ''}) as total_shops,
         (SELECT COUNT(*) FROM visit_responses ${dateFilterVR ? dateFilterVR + ' AND converted = 1' : 'WHERE converted = 1'}) as conversions,
         (SELECT COUNT(*) FROM visit_responses ${dateFilterVR}) as total_visits
     `).first();
@@ -285,6 +304,8 @@ app.get('/api/dashboard/checkins-by-day', async (c) => {
 app.get('/api/dashboard/agent-performance', async (c) => {
   const startDate = c.req.query('startDate');
   const endDate = c.req.query('endDate');
+  const source = c.req.query('source');
+  const sf = sourceFilter(source, 'c');
   
   try {
     if (startDate || endDate) {
@@ -298,7 +319,7 @@ app.get('/api/dashboard/agent-performance', async (c) => {
         FROM checkins c
         LEFT JOIN visit_responses vr ON c.id = vr.checkin_id
         LEFT JOIN agent_performance ap ON c.agent_id = ap.agent_id
-        WHERE 1=1`;
+        WHERE 1=1${sf}`;
       const params: string[] = [];
       if (startDate) { query += ' AND c.timestamp >= ?'; params.push(startDate); }
       if (endDate) { query += " AND c.timestamp <= ? || ' 23:59:59'"; params.push(endDate); }
@@ -311,6 +332,7 @@ app.get('/api/dashboard/agent-performance', async (c) => {
     const result = await c.env.DB.prepare(`
       SELECT agent_id, agent_name, checkin_count, conversions, conversion_rate
       FROM agent_performance
+      WHERE 1=1${sourceFilter(source)}
       ORDER BY checkin_count DESC
       LIMIT 20
     `).all();
@@ -356,16 +378,18 @@ app.get('/api/shops', async (c) => {
   const page = parseInt(c.req.query('page') || '1');
   const limit = parseInt(c.req.query('limit') || '100');
   const offset = (page - 1) * limit;
+  const source = c.req.query('source');
+  const sf = sourceFilter(source);
   
   try {
     const shops = await c.env.DB.prepare(`
       SELECT * FROM shops 
-      WHERE latitude != 0 AND longitude != 0
+      WHERE latitude != 0 AND longitude != 0${sf}
       ORDER BY id
       LIMIT ? OFFSET ?
     `).bind(limit, offset).all();
     
-    const total = await c.env.DB.prepare('SELECT COUNT(*) as count FROM shops WHERE latitude != 0 AND longitude != 0').first();
+    const total = await c.env.DB.prepare(`SELECT COUNT(*) as count FROM shops WHERE latitude != 0 AND longitude != 0${sf}`).first();
     
     return c.json({ 
       shops: shops.results, 
@@ -387,11 +411,16 @@ app.get('/api/checkins', async (c) => {
   const endDate = c.req.query('endDate');
   const agentId = c.req.query('agentId');
   const status = c.req.query('status');
+  const source = c.req.query('source');
+  const sf = sourceFilter(source);
   
   try {
     let query = 'SELECT * FROM checkins WHERE 1=1';
     const params: (string | number)[] = [];
     
+    if (sf) {
+      query += sf;
+    }
     if (startDate) {
       query += ' AND timestamp >= ?';
       params.push(startDate);
@@ -418,6 +447,9 @@ app.get('/api/checkins', async (c) => {
     let countQuery = 'SELECT COUNT(*) as count FROM checkins WHERE 1=1';
     const countParams: (string | number)[] = [];
     
+    if (sf) {
+      countQuery += sf;
+    }
     if (startDate) {
       countQuery += ' AND timestamp >= ?';
       countParams.push(startDate);
@@ -507,10 +539,13 @@ app.get('/api/checkins-map', async (c) => {
 });
 
 app.get('/api/agents', async (c) => {
+  const source = c.req.query('source');
+  const sf = sourceFilter(source);
   try {
     const agents = await c.env.DB.prepare(`
       SELECT DISTINCT agent_id, agent_name 
       FROM agent_performance 
+      WHERE 1=1${sf}
       ORDER BY agent_name
     `).all();
     
@@ -912,5 +947,54 @@ async function generateJWT(payload: Record<string, unknown>, secret: string): Pr
   
   return `${headerB64}.${payloadB64}.${signatureB64}`;
 }
+
+// Sync status endpoint
+app.get('/api/sync/status', async (c) => {
+  try {
+    const result = await c.env.DB.prepare(
+      'SELECT * FROM sync_metadata ORDER BY last_sync_at DESC'
+    ).all();
+    return c.json({ syncs: result.results });
+  } catch (error) {
+    console.error('Sync status error:', error);
+    return c.json({ error: 'Failed to fetch sync status' }, 500);
+  }
+});
+
+// Data sources summary endpoint
+app.get('/api/data-sources', async (c) => {
+  try {
+    const checkinsBySource = await c.env.DB.prepare(`
+      SELECT 
+        COALESCE(data_source, 'salessync') as source,
+        COUNT(*) as count
+      FROM checkins
+      GROUP BY data_source
+    `).all();
+    
+    const shopsBySource = await c.env.DB.prepare(`
+      SELECT 
+        COALESCE(data_source, 'salessync') as source,
+        COUNT(*) as count
+      FROM shops
+      GROUP BY data_source
+    `).all();
+    
+    const syncMeta = await c.env.DB.prepare(
+      'SELECT * FROM sync_metadata WHERE source = ?'
+    ).bind('fieldvibe').first();
+    
+    return c.json({
+      sources: {
+        checkins: checkinsBySource.results,
+        shops: shopsBySource.results,
+      },
+      lastFieldVibeSync: syncMeta,
+    });
+  } catch (error) {
+    console.error('Data sources error:', error);
+    return c.json({ error: 'Failed to fetch data sources' }, 500);
+  }
+});
 
 export default app;
