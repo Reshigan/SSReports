@@ -21,12 +21,16 @@ import {
   Filter, ChevronLeft, ChevronRight, Eye, MapPin, Clock, User
 } from 'lucide-react';
 
+import DataSourceFilter from '@/components/DataSourceFilter';
+
 interface CheckinsListProps {
   apiUrl: string;
   startDate: string;
   endDate: string;
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
+  dataSource: string;
+  onDataSourceChange: (source: string) => void;
 }
 
 interface Checkin {
@@ -59,7 +63,7 @@ interface VisitResponse {
   created_at: string;
 }
 
-export default function CheckinsList({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: CheckinsListProps) {
+export default function CheckinsList({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange, dataSource, onDataSourceChange }: CheckinsListProps) {
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -78,7 +82,7 @@ export default function CheckinsList({ apiUrl, startDate, endDate, onStartDateCh
 
   useEffect(() => {
     fetchCheckins();
-  }, [page]);
+  }, [page, dataSource]);
 
   const fetchAgents = async () => {
     try {
@@ -103,6 +107,7 @@ export default function CheckinsList({ apiUrl, startDate, endDate, onStartDateCh
       if (endDate) url += `&endDate=${endDate}`;
       if (status) url += `&status=${status}`;
       if (agentId) url += `&agentId=${agentId}`;
+      if (dataSource && dataSource !== 'all') url += `&source=${dataSource}`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -225,6 +230,7 @@ export default function CheckinsList({ apiUrl, startDate, endDate, onStartDateCh
               ))}
             </select>
           </div>
+          <DataSourceFilter source={dataSource} onSourceChange={onDataSourceChange} />
           <Button onClick={handleFilter} className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg shadow-blue-500/30 rounded-xl">
             Apply Filters
           </Button>

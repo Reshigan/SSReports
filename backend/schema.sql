@@ -10,16 +10,18 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
--- Shops table (synced from MySQL)
+-- Shops table (synced from MySQL and FieldVibe)
 CREATE TABLE IF NOT EXISTS shops (
   id INTEGER PRIMARY KEY,
   name TEXT,
   address TEXT,
   latitude REAL,
-  longitude REAL
+  longitude REAL,
+  data_source TEXT DEFAULT 'salessync',
+  fv_id TEXT
 );
 
--- Checkins table (synced from MySQL)
+-- Checkins table (synced from MySQL and FieldVibe)
 CREATE TABLE IF NOT EXISTS checkins (
   id INTEGER PRIMARY KEY,
   agent_id INTEGER,
@@ -34,10 +36,15 @@ CREATE TABLE IF NOT EXISTS checkins (
   status TEXT,
   brand_id INTEGER,
   category_id INTEGER,
-  product_id INTEGER
+  product_id INTEGER,
+  data_source TEXT DEFAULT 'salessync',
+  fv_id TEXT,
+  individual_name TEXT,
+  individual_surname TEXT,
+  individual_phone TEXT
 );
 
--- Visit responses table (synced from MySQL)
+-- Visit responses table (synced from MySQL and FieldVibe)
 CREATE TABLE IF NOT EXISTS visit_responses (
   id INTEGER PRIMARY KEY,
   checkin_id INTEGER,
@@ -45,7 +52,9 @@ CREATE TABLE IF NOT EXISTS visit_responses (
   responses TEXT,
   converted INTEGER DEFAULT 0,
   already_betting INTEGER DEFAULT 0,
-  created_at TEXT
+  created_at TEXT,
+  data_source TEXT DEFAULT 'salessync',
+  fv_id TEXT
 );
 
 -- Agent performance aggregated table
@@ -54,7 +63,9 @@ CREATE TABLE IF NOT EXISTS agent_performance (
   agent_name TEXT,
   checkin_count INTEGER DEFAULT 0,
   conversions INTEGER DEFAULT 0,
-  conversion_rate REAL DEFAULT 0
+  conversion_rate REAL DEFAULT 0,
+  data_source TEXT DEFAULT 'salessync',
+  fv_agent_id TEXT
 );
 
 -- Checkins by hour aggregated table
@@ -84,12 +95,24 @@ CREATE TABLE IF NOT EXISTS geographic_hotspots (
   count INTEGER DEFAULT 0
 );
 
+-- Sync metadata table to track last sync timestamps
+CREATE TABLE IF NOT EXISTS sync_metadata (
+  source TEXT PRIMARY KEY,
+  last_sync_at TEXT,
+  records_synced INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'idle'
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_checkins_timestamp ON checkins(timestamp);
 CREATE INDEX IF NOT EXISTS idx_checkins_agent ON checkins(agent_id);
 CREATE INDEX IF NOT EXISTS idx_checkins_status ON checkins(status);
 CREATE INDEX IF NOT EXISTS idx_checkins_location ON checkins(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_checkins_source ON checkins(data_source);
 CREATE INDEX IF NOT EXISTS idx_visit_responses_checkin ON visit_responses(checkin_id);
+CREATE INDEX IF NOT EXISTS idx_visit_responses_source ON visit_responses(data_source);
+CREATE INDEX IF NOT EXISTS idx_shops_source ON shops(data_source);
+CREATE INDEX IF NOT EXISTS idx_agent_performance_source ON agent_performance(data_source);
 
 -- Insert default admin user (password: admin123)
 INSERT OR IGNORE INTO users (email, password_hash, name, role) 

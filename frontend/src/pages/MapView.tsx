@@ -6,6 +6,7 @@ import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaf
 import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, Filter, RefreshCw } from 'lucide-react';
+import DataSourceFilter from '@/components/DataSourceFilter';
 
 interface MapViewProps {
   apiUrl: string;
@@ -13,6 +14,8 @@ interface MapViewProps {
   endDate: string;
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
+  dataSource: string;
+  onDataSourceChange: (source: string) => void;
 }
 
 interface Shop {
@@ -43,7 +46,7 @@ const defaultIcon = new Icon({
   shadowSize: [41, 41]
 });
 
-export default function MapView({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: MapViewProps) {
+export default function MapView({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange, dataSource, onDataSourceChange }: MapViewProps) {
   const [shops, setShops] = useState<Shop[]>([]);
   const [checkins, setCheckins] = useState<CheckinMarker[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,14 +55,22 @@ export default function MapView({ apiUrl, startDate, endDate, onStartDateChange,
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [dataSource]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
+      const sourceParam = dataSource && dataSource !== 'all' ? `source=${dataSource}` : '';
+      const shopsUrl = sourceParam ? `${apiUrl}/api/shops?limit=500&${sourceParam}` : `${apiUrl}/api/shops?limit=500`;
+      let checkinsMapUrl = `${apiUrl}/api/checkins-map`;
+      const mapParams: string[] = [];
+      if (startDate) mapParams.push(`startDate=${startDate}`);
+      if (endDate) mapParams.push(`endDate=${endDate}`);
+      if (sourceParam) mapParams.push(sourceParam);
+      if (mapParams.length > 0) checkinsMapUrl += `?${mapParams.join('&')}`;
       const [shopsRes, checkinsRes] = await Promise.all([
-        fetch(`${apiUrl}/api/shops?limit=500`),
-        fetch(`${apiUrl}/api/checkins-map${startDate || endDate ? `?${startDate ? `startDate=${startDate}` : ''}${startDate && endDate ? '&' : ''}${endDate ? `endDate=${endDate}` : ''}` : ''}`),
+        fetch(shopsUrl),
+        fetch(checkinsMapUrl),
       ]);
 
       const [shopsData, checkinsData] = await Promise.all([
@@ -150,6 +161,7 @@ export default function MapView({ apiUrl, startDate, endDate, onStartDateChange,
               <span className="text-sm text-slate-600">Show Checkins</span>
             </label>
           </div>
+          <DataSourceFilter source={dataSource} onSourceChange={onDataSourceChange} />
           <Button onClick={handleFilter} className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg shadow-blue-500/30 rounded-xl">
             <RefreshCw className="h-4 w-4 mr-2" />
             Apply Filters

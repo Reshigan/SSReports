@@ -12,9 +12,17 @@ binding = "DB"
 database_name = "ssreports-db"
 database_id = "8312a7c3-1334-46a9-b980-7dd8ce6392ca"
 
+[[d1_databases]]
+binding = "FIELDVIBE_D1"
+database_name = "fieldvibe-db"
+database_id = "1521287d-96be-42b7-b77c-e8c5f67629a6"
+
 [[r2_buckets]]
 binding = "PHOTOS"
 bucket_name = "ssreports-photos"
+
+[triggers]
+crons = ["0 */2 * * *"]
 
 [env.production]
 routes = [
