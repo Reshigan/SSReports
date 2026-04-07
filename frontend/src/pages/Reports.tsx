@@ -9,7 +9,6 @@ import {
   Users, MapPin, Target
 } from 'lucide-react';
 import DateRangeFilter from '@/components/DateRangeFilter';
-import DataSourceFilter from '@/components/DataSourceFilter';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -20,8 +19,6 @@ interface ReportsProps {
   endDate: string;
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
-  dataSource: string;
-  onDataSourceChange: (source: string) => void;
 }
 
 interface AgentPerformance {
@@ -48,7 +45,7 @@ interface ExportData {
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
-export default function Reports({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange, dataSource, onDataSourceChange }: ReportsProps) {
+export default function Reports({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: ReportsProps) {
   const [agentPerformance, setAgentPerformance] = useState<AgentPerformance[]>([]);
   const [hourlyData, setHourlyData] = useState<{ hour: number; count: number }[]>([]);
   const [dailyData, setDailyData] = useState<{ day_name: string; count: number }[]>([]);
@@ -63,7 +60,7 @@ export default function Reports({ apiUrl, startDate, endDate, onStartDateChange,
 
   useEffect(() => {
     fetchReportData();
-  }, [dataSource]);
+  }, []);
 
   const fetchReportData = async (overrideStartDate?: string, overrideEndDate?: string) => {
     setLoading(true);
@@ -73,7 +70,6 @@ export default function Reports({ apiUrl, startDate, endDate, onStartDateChange,
       const dateParams = new URLSearchParams();
       if (start) dateParams.append('startDate', start);
       if (end) dateParams.append('endDate', end);
-      if (dataSource && dataSource !== 'all') dateParams.append('source', dataSource);
       const queryString = dateParams.toString() ? `?${dateParams.toString()}` : '';
 
       const [agentsRes, hourlyRes, dailyRes, conversionRes] = await Promise.all([
@@ -117,8 +113,6 @@ export default function Reports({ apiUrl, startDate, endDate, onStartDateChange,
       let url = `${apiUrl}/api/export/checkins?format=json`;
       if (startDate) url += `&startDate=${startDate}`;
       if (endDate) url += `&endDate=${endDate}`;
-      if (dataSource && dataSource !== 'all') url += `&source=${dataSource}`;
-
       const response = await fetch(url);
       const result = await response.json();
       const data: ExportData[] = result.data || [];
@@ -165,7 +159,7 @@ export default function Reports({ apiUrl, startDate, endDate, onStartDateChange,
       
       doc.setFontSize(20);
       doc.setTextColor(16, 185, 129);
-      doc.text('SSReports - SalesSync Analytics', 14, 22);
+      doc.text('SSReports - FieldVibe Analytics', 14, 22);
       
       doc.setFontSize(10);
       doc.setTextColor(100);
@@ -276,7 +270,6 @@ export default function Reports({ apiUrl, startDate, endDate, onStartDateChange,
             onApply={handleDateFilter}
             onClear={handleClearFilter}
           />
-          <DataSourceFilter source={dataSource} onSourceChange={onDataSourceChange} />
         </div>
       </div>
 

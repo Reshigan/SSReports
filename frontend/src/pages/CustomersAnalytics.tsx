@@ -24,7 +24,6 @@ import {
 import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import PhotoModal from '@/components/PhotoModal';
 import DateRangeFilter from '@/components/DateRangeFilter';
-import DataSourceFilter from '@/components/DataSourceFilter';
 
 interface CustomersAnalyticsProps {
   apiUrl: string;
@@ -32,8 +31,6 @@ interface CustomersAnalyticsProps {
   endDate: string;
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
-  dataSource: string;
-  onDataSourceChange: (source: string) => void;
 }
 
 interface CustomerRecord {
@@ -87,7 +84,7 @@ interface Stats {
 
 const COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6'];
 
-export default function CustomersAnalytics({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange, dataSource, onDataSourceChange }: CustomersAnalyticsProps) {
+export default function CustomersAnalytics({ apiUrl, startDate, endDate, onStartDateChange, onEndDateChange }: CustomersAnalyticsProps) {
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -105,7 +102,7 @@ export default function CustomersAnalytics({ apiUrl, startDate, endDate, onStart
 
   useEffect(() => {
     fetchCustomers();
-  }, [page, dataSource]);
+  }, [page]);
 
   const fetchCustomers = async (overrideStartDate?: string, overrideEndDate?: string) => {
     setLoading(true);
@@ -115,7 +112,6 @@ export default function CustomersAnalytics({ apiUrl, startDate, endDate, onStart
       let url = `${apiUrl}/api/customers-analytics?page=${page}&limit=${limit}`;
       if (start) url += `&startDate=${start}`;
       if (end) url += `&endDate=${end}`;
-      if (dataSource && dataSource !== 'all') url += `&source=${dataSource}`;
       const res = await fetch(url);
       const data = await res.json();
       setCustomers(data.customers || []);
@@ -216,7 +212,6 @@ export default function CustomersAnalytics({ apiUrl, startDate, endDate, onStart
             onApply={handleDateFilter}
             onClear={handleClearFilter}
           />
-          <DataSourceFilter source={dataSource} onSourceChange={onDataSourceChange} />
         </div>
       </div>
 

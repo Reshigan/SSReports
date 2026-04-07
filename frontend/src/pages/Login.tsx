@@ -51,9 +51,9 @@ export default function Login({ onLogin, apiUrl }: LoginProps) {
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl p-8">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <img src="/logo.svg" alt="SalesSync" className="w-10 h-10" />
+              <img src="/logo.svg" alt="FieldVibe" className="w-10 h-10" />
             </div>
-            <h1 className="text-3xl font-bold text-white">SalesSync</h1>
+            <h1 className="text-3xl font-bold text-white">FieldVibe</h1>
             <p className="text-slate-300 mt-2">Analytics & Reporting Platform</p>
           </div>
           
@@ -102,7 +102,7 @@ export default function Login({ onLogin, apiUrl }: LoginProps) {
         </div>
         
         <p className="text-center text-slate-500 text-sm mt-6">
-          Powered by SalesSync Analytics
+          Powered by FieldVibe Analytics
         </p>
       </div>
     </div>
