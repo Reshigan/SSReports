@@ -741,7 +741,7 @@ app.get('/api/photos/:checkinId', async (c) => {
         const parts = base64Data.split(',');
         const mimeMatch = parts[0].match(/data:(image\/[^;]+)/);
         const contentType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-        const raw = parts[1];
+        const raw = (parts[1] || '').replace(/[\s\r\n]+/g, '');
         const binaryString = atob(raw);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
@@ -753,7 +753,8 @@ app.get('/api/photos/:checkinId', async (c) => {
         return new Response(bytes, { headers });
       } else {
         // Raw base64 without data URI prefix
-        const binaryString = atob(base64Data);
+        const cleaned = base64Data.replace(/[\s\r\n]+/g, '');
+        const binaryString = atob(cleaned);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
