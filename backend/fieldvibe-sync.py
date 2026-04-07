@@ -194,7 +194,7 @@ def sync_visits_as_checkins(since=None):
                 fv_status = "APPROVED"
 
             execute_ssreports(
-                "INSERT OR REPLACE INTO checkins (id, agent_id, shop_id, timestamp, latitude, longitude, photo_path, notes, status, brand_id, category_id, product_id, data_source, fv_id, individual_name, individual_surname, individual_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'fieldvibe', ?, ?, ?, ?)",
+                "INSERT INTO checkins (id, agent_id, shop_id, timestamp, latitude, longitude, photo_path, notes, status, brand_id, category_id, product_id, data_source, fv_id, individual_name, individual_surname, individual_phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'fieldvibe', ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET agent_id=excluded.agent_id, shop_id=excluded.shop_id, timestamp=excluded.timestamp, latitude=excluded.latitude, longitude=excluded.longitude, photo_path=excluded.photo_path, notes=excluded.notes, status=excluded.status, brand_id=excluded.brand_id, category_id=excluded.category_id, product_id=excluded.product_id, data_source=excluded.data_source, fv_id=excluded.fv_id, individual_name=excluded.individual_name, individual_surname=excluded.individual_surname, individual_phone=excluded.individual_phone",
                 [int_id, agent_int_id, shop_int_id, timestamp,
                  visit.get("latitude"), visit.get("longitude"),
                  visit.get("photo_url"), visit.get("notes"), fv_status,
