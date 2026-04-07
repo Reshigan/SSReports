@@ -712,23 +712,60 @@ app.get('/api/customer/:checkinId', async (c) => {
   }
 });
 
-// Serve photos from R2
+// Serve photos from R2, falling back to photo_base64 in D1
 app.get('/api/photos/:checkinId', async (c) => {
   const checkinId = c.req.param('checkinId');
   
   try {
+    // Try R2 first
     const key = `checkins/${checkinId}.jpg`;
     const object = await c.env.PHOTOS.get(key);
     
-    if (!object) {
-      return c.json({ error: 'Photo not found' }, 404);
+    if (object) {
+      const headers = new Headers();
+      headers.set('Content-Type', 'image/jpeg');
+      headers.set('Cache-Control', 'public, max-age=31536000');
+      return new Response(object.body, { headers });
     }
     
-    const headers = new Headers();
-    headers.set('Content-Type', 'image/jpeg');
-    headers.set('Cache-Control', 'public, max-age=31536000');
+    // Fall back to photo_base64 stored in D1
+    const checkin = await c.env.DB.prepare(
+      'SELECT photo_base64 FROM checkins WHERE id = ?'
+    ).bind(checkinId).first();
     
-    return new Response(object.body, { headers });
+    if (checkin?.photo_base64) {
+      const base64Data = checkin.photo_base64 as string;
+      // Handle data URI or raw base64
+      if (base64Data.startsWith('data:image')) {
+        // Return as redirect to data URI isn't possible, so decode and serve
+        const parts = base64Data.split(',');
+        const mimeMatch = parts[0].match(/data:(image\/[^;]+)/);
+        const contentType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const raw = parts[1];
+        const binaryString = atob(raw);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const headers = new Headers();
+        headers.set('Content-Type', contentType);
+        headers.set('Cache-Control', 'public, max-age=86400');
+        return new Response(bytes, { headers });
+      } else {
+        // Raw base64 without data URI prefix
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const headers = new Headers();
+        headers.set('Content-Type', 'image/jpeg');
+        headers.set('Cache-Control', 'public, max-age=86400');
+        return new Response(bytes, { headers });
+      }
+    }
+    
+    return c.json({ error: 'Photo not found' }, 404);
   } catch (error) {
     console.error('Get photo error:', error);
     return c.json({ error: 'Failed to fetch photo' }, 500);

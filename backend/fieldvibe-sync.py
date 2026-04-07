@@ -266,6 +266,100 @@ def sync_visit_responses(since=None):
     return total_count
 
 
+def sync_visit_photos():
+    """Sync photos from FieldVibe visit_photos table into SSReports checkins.photo_base64.
+    Also extracts image fields from visit_responses.responses (questionnaire photos)."""
+    log("Syncing FieldVibe visit photos...")
+    total_count = 0
+    offset = 0
+    batch_size = 50  # Small batches since photos are large base64 strings
+
+    # 1) Pull from visit_photos table (checkin photos)
+    while True:
+        photos = query_fieldvibe(
+            f"SELECT vp.visit_id, vp.r2_url FROM visit_photos vp "
+            f"WHERE vp.r2_url IS NOT NULL AND vp.r2_url != '' "
+            f"ORDER BY vp.created_at ASC LIMIT {batch_size} OFFSET {offset}"
+        )
+        if not photos:
+            break
+
+        for photo in photos:
+            visit_id = photo.get("visit_id")
+            r2_url = photo.get("r2_url")
+            if not visit_id or not r2_url:
+                continue
+
+            checkin_int_id = fv_uuid_to_int(visit_id)
+            # r2_url contains the base64 data directly
+            execute_ssreports(
+                "UPDATE checkins SET photo_base64 = ? WHERE id = ? AND (photo_base64 IS NULL OR photo_base64 = '')",
+                [r2_url, checkin_int_id]
+            )
+            total_count += 1
+
+        log(f"  Visit photos progress: {total_count} photos processed")
+        if len(photos) < batch_size:
+            break
+        offset += batch_size
+
+    # 2) Extract questionnaire image fields from visit_responses
+    log("Extracting questionnaire photos from visit_responses...")
+    quest_offset = 0
+    quest_count = 0
+    image_keys = ["outsidePhoto", "boardPhoto", "competitorPhotos"]
+
+    while True:
+        responses = query_fieldvibe(
+            f"SELECT vr.visit_id, vr.responses FROM visit_responses vr "
+            f"WHERE vr.responses LIKE '%data:image%' "
+            f"ORDER BY vr.created_at ASC LIMIT {batch_size} OFFSET {quest_offset}"
+        )
+        if not responses:
+            break
+
+        for resp in responses:
+            visit_id = resp.get("visit_id")
+            if not visit_id:
+                continue
+            try:
+                data = json.loads(resp.get("responses") or "{}")
+            except (json.JSONDecodeError, TypeError):
+                continue
+
+            checkin_int_id = fv_uuid_to_int(visit_id)
+
+            # Collect all image fields into additional_photos_base64 JSON array
+            quest_images = {}
+            for key in image_keys:
+                val = data.get(key)
+                if val and isinstance(val, str) and val.startswith("data:image"):
+                    quest_images[key] = val
+
+            if quest_images:
+                # If no primary photo yet, use the first questionnaire image as primary
+                first_image = next(iter(quest_images.values()))
+                execute_ssreports(
+                    "UPDATE checkins SET photo_base64 = COALESCE(NULLIF(photo_base64, ''), ?) WHERE id = ?",
+                    [first_image, checkin_int_id]
+                )
+                # Store all questionnaire images as additional photos
+                execute_ssreports(
+                    "UPDATE checkins SET additional_photos_base64 = ? WHERE id = ?",
+                    [json.dumps(quest_images), checkin_int_id]
+                )
+                quest_count += 1
+
+        log(f"  Questionnaire photos progress: {quest_count} records with images")
+        if len(responses) < batch_size:
+            break
+        quest_offset += batch_size
+
+    total_count += quest_count
+    log(f"Synced {total_count} FieldVibe photos total")
+    return total_count
+
+
 def sync_agent_performance():
     log("Calculating FieldVibe agent performance...")
     agents = query_fieldvibe(
@@ -326,9 +420,10 @@ def main():
         shops = sync_customers_as_shops()
         checkins = sync_visits_as_checkins(since=since)
         responses = sync_visit_responses(since=since)
+        photos = sync_visit_photos()
         agents = sync_agent_performance()
 
-        total = shops + checkins + responses + agents
+        total = shops + checkins + responses + photos + agents
         update_sync_metadata(total)
 
         log(f"Sync complete: {total} total records synced")
